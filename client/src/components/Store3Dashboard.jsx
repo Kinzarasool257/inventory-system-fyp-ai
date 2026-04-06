@@ -1,4 +1,4 @@
-export default function UserDashboard() {
+export default function Store3Dashboard() {
   return (
     <div>
       <h2>User Dashboard</h2>

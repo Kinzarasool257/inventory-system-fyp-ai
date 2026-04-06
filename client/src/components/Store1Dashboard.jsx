@@ -35,7 +35,7 @@ function StatCard({ value, title, subtext, svgPath }) {
   );
 }
 
-export default function AdminDashboard() {
+export default function Store1Dashboard() {
   return (
     <DashboardLayout>
       {/* Top Info Bar */}

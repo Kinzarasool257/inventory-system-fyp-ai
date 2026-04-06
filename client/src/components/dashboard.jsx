@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import AdminDashboard from "./Store1Dashboard";
-import ManagerDashboard from "./Store2Dashboard";
-import UserDashboard from "./Store3Dashboard";
-
+import Store1Dashboard from "./Store1Dashboard";
+import Store2Dashboard from "./Store2Dashboard";
+import Store3Dashboard from "./Store3Dashboard";
+import Store4Dashboard from "./Store4Dashboard";
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [message, setMessage] = useState("");
@@ -46,9 +46,10 @@ export default function Dashboard() {
       {/* <button onClick={logout}>Logout</button> */}
 
       {/* Role-based dashboard */}
-      {user.role === "store1" && <AdminDashboard />}
-      {user.role === "store2" && <ManagerDashboard />}
-      {user.role === "store3" && <UserDashboard />}
+      {user.role === "store1" && <Store1Dashboard />}
+      {user.role === "store2" && <Store2Dashboard />}
+      {user.role === "store3" && <Store3Dashboard />}
+      {user.role === "store4" && <Store4Dashboard />}
     </div>
   );
 }

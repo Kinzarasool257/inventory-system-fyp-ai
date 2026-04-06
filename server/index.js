@@ -238,7 +238,13 @@ app.get('/store3-dashboard',
     res.json({ message: 'Welcome User Dashboard' });
   }
 );
-
+app.get('/store4-dashboard',
+  verifyToken,
+  authorizeRoles('store4'),
+  (req, res) => {
+    res.json({ message: 'Welcome store4 Dashboard' });
+  }
+);
 // ✅ Protected route example
 app.get('/protected', (req, res) => {
   const authHeader = req.headers['authorization'];

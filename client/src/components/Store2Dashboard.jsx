@@ -1,4 +1,4 @@
-export default function ManagerDashboard() {
+export default function Store2Dashboard() {
   return (
     <div>
       <h2>Manager Dashboard</h2>
