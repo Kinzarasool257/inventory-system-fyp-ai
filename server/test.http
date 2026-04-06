@@ -1,0 +1,34 @@
+### Signup Store1 User
+POST http://localhost:3002/signup
+Content-Type: application/json
+
+{
+  "Email": "store1@test.com",
+  "Name": "Store One",
+  "Password": "123456",
+  "role": "store1"
+}
+
+### Signup Store2 User
+POST http://localhost:3002/signup
+Content-Type: application/json
+
+{
+  "Email": "store2@test.com",
+  "Name": "Store Two",
+  "Password": "123456",
+  "role": "store2"
+}
+
+### Login Store1
+POST http://localhost:3002/login
+Content-Type: application/json
+
+{
+  "LoginEmail": "store1@test.com",
+  "LoginPassword": "123456"
+}
+
+### Access Store1 Dashboard (Correct Role)
+GET http://localhost:3002/store1-dashboard
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIyLCJlbWFpbCI6InN0b3JlMUB0ZXN0LmNvbSIsInJvbGUiOiJzdG9yZTEiLCJpYXQiOjE3NzU0MTI4MDcsImV4cCI6MTc3NTQxNjQwN30.bEHzCWS63dKwPW2G8k-diJ0Xna43HbTMMRYSoji94rg
