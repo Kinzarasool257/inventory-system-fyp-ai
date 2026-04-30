@@ -14,7 +14,7 @@ Content-Type: application/json
 
 {
   "Email": "store2@gmail.com",
-  "Name": "Store3",
+  "Name": "Store2",
   "Password": "123456",
   "role": "store2"
 }
@@ -41,12 +41,13 @@ Content-Type: application/json
   "role": "store4"
 }
 
-### Login Store1
+
+### Login Store2
 POST http://localhost:3002/login
 Content-Type: application/json
 
 {
-  "LoginEmail": "store2@test.com",
+  "LoginEmail": "store1@test.com",
   "LoginPassword": "123456"
 }
 ###forecast prediction
@@ -72,3 +73,28 @@ GET http://localhost:3002/api/anomalies
 
 ####audit report
 POST http://localhost:3002/api/audit-report
+
+
+### Signup admin
+POST http://localhost:3002/signup
+Content-Type: application/json
+
+{
+  "Email": "maham26@gmail.com",
+  "Name": "maham",
+  "Password": "maham26",
+  "role": "admin"
+}
+
+### Login admin
+POST http://localhost:3002/login
+Content-Type: application/json
+
+{
+  "LoginEmail": "maham26@gmail.com",
+  "LoginPassword": "maham26"
+}
+
+### Access admin Dashboard (Correct Role)
+GET http://localhost:3002/admin-dashboard
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU4LCJlbWFpbCI6Im1haGFtMjZAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc3NTMyNDM4LCJleHAiOjE3Nzc1MzYwMzh9.uykXr-M4Tjm1Kr1jRnmuJxTINi6-VNxyBnMfr-dbor0

@@ -153,11 +153,19 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.get('/admin-dashboard',
+  verifyToken,
+  authorizeRoles('admin'),
+  (req, res) => {
+    res.json({ message: 'Welcome Admin Dashboard' });
+  }
+);
+
 app.get('/store1-dashboard',
   verifyToken,
   authorizeRoles('store1'),
   (req, res) => {
-    res.json({ message: 'Welcome Admin Dashboard' });
+    res.json({ message: 'Welcome manager Dashboard' });
   }
 );
 app.get('/store2-dashboard',

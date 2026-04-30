@@ -7,7 +7,7 @@ import Header from "./components/header";
 import Dashboard from "./components/dashboard"; // small stat card
 import InventoryOverview from "./components/graphs"; // 👈 MIDDLE DASHBOARD UI
 import FileUpload from "./components/FileUpload";
-
+import StoreAdminView from "./components/StoreDashboardView";
 import AdminChat from "./pages/AdminChat";
 import UserChat from "./pages/UserChat";
 import StockDashboard from "./StockDashboard";
@@ -50,8 +50,7 @@ function App() {
   return (
     <Router>
       <Routes>
-
-        {/* Redirect root to login */}
+       
         <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* Auth pages */}
@@ -66,6 +65,9 @@ function App() {
         <Route path="/admin-chat" element={<AdminChat />} />
         <Route path="/user-chat" element={<UserChat />} />
         <Route path="stock" element={<StockDashboard />} />
+        <Route path="/view" element={<StoreAdminView />} />
+        
+
 
       </Routes>
     </Router>
@@ -73,3 +75,4 @@ function App() {
 }
 
 export default App;
+

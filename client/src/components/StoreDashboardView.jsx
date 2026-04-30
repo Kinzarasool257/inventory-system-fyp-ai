@@ -8,7 +8,7 @@ import {
   Layers, ShoppingCart
 } from 'lucide-react';
 
-const Store3Dashboard = () => {
+const StoreAdminView = () => {
   // 1. DYNAMIC AUTH & ROLE MANAGEMENT
   // Retrieve user data from your AuthContext or LocalStorage after login
   const [userData, setUserData] = useState(() => {
@@ -17,15 +17,15 @@ const Store3Dashboard = () => {
   });
 
   // Automatically map the role (store1, store2, etc.) to the Warehouse ID
-  // const roleToWH = {
-  //   'store1': 'WH-1',
-  //   'store2': 'WH-2',
-  //   'store3': 'WH-3',
-  //   'store4': 'WH-4',
-  //   'admin': 'WH-1' // Admin defaults to WH-1 or can be handled separately
-  // };
+  const roleToWH = {
+    'store1': 'WH-1',
+    'store2': 'WH-2',
+    'store3': 'WH-3',
+    'store4': 'WH-4',
+    'admin': 'WH-1' // Admin defaults to WH-1 or can be handled separately
+  };
 
-  const selectedStore =  'WH-3';
+  const selectedStore = roleToWH[userData.role] || 'WH-1';
   
   // 2. STATE MANAGEMENT
   const [selectedProduct, setSelectedProduct] = useState('Book_1');
@@ -150,7 +150,7 @@ const Store3Dashboard = () => {
             <StatCard label="Store Anomalies" value={anomalies.length} trend="Alert" icon={<AlertTriangle className="text-red-500"/>} onClick={() => setIsAnomalyModalOpen(true)} clickable />
             <div className="bg-white/5 border border-white/10 p-5 rounded-2xl flex flex-col justify-between">
                 <div className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Role Access</div>
-                <p className="text-xl font-black text-blue-400 mt-2 italic uppercase">WH-3</p>
+                <p className="text-xl font-black text-blue-400 mt-2 italic uppercase">{userData.role}</p>
             </div>
           </div>
 
@@ -253,4 +253,4 @@ const Dropdown = ({ label, value, onChange, options }) => (
   <div><label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">{label}</label><select value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs mt-1 text-white focus:outline-none focus:border-blue-500">{options.map(opt => <option key={opt} value={opt} className="bg-[#0a0a0c]">{opt}</option>)}</select></div>
 );
 
-export default Store3Dashboard;
+export default StoreAdminView;
