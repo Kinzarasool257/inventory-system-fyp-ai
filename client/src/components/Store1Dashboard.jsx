@@ -20,12 +20,15 @@ const Store1Dashboard = () => {
 
   const selectedStore = 'WH-1';
   const categories = ['Books', 'Toys', 'Electronics', 'Clothes'];
+  const generateProducts = (prefix, count) =>
+  Array.from({ length: count }, (_, i) => `${prefix}_${i + 1}`);
+
   const productMap = {
-    'Books': ['Book_1', 'Book_2', 'Book_3'],
-    'Toys': ['Toy_1', 'Toy_2'],
-    'Electronics': ['Laptop_1', 'Phone_1'],
-    'Clothes': ['Shirt_1', 'Jeans_1']
-  };
+    Books: generateProducts("Book", 20),
+    Toys: generateProducts("Toy", 20),
+    Electronics: generateProducts("Electronic", 20),
+    Clothes: generateProducts("Cloth", 20),
+};
 
   const COLORS = ['#4F46E5', '#8B5CF6', '#EC4899', '#10B981'];
 
@@ -34,7 +37,7 @@ const Store1Dashboard = () => {
   const [selectedProduct, setSelectedProduct] = useState('Book_1');
   const [currentStock, setCurrentStock] = useState(50);
   const [basePrice, setBasePrice] = useState(100.00);
-  const [competitorPrice, setCompetitorPrice] = useState(105.00);
+  const [competitorPrice, setCompetitorPrice] = useState(105);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [inventoryLog, setInventoryLog] = useState([]);
@@ -77,7 +80,10 @@ const Store1Dashboard = () => {
         store: selectedStore, item: selectedProduct, stock: currentStock, price: basePrice
       });
       setForecastResult(response.data);
-      setCompetitorPrice(basePrice * (0.95 + Math.random() * 0.15)); 
+    } catch (error) { console.error(error); } finally { setIsSyncing(false); }
+    try {
+      const response = await axios.get(`http://localhost:3002/competitor-price?store=${selectedStore}&item=${selectedProduct}&stock=${currentStock}&price=${basePrice}`);
+      setCompetitorPrice(response.data.competitor_price); 
     } catch (error) { console.error(error); } finally { setIsSyncing(false); }
   };
 
@@ -238,8 +244,14 @@ const Store1Dashboard = () => {
                   {forecastResult ? (
                     <div className="bg-slate-50 border border-slate-200 p-8 rounded-[2rem] space-y-6 text-center">
                        <div className="border-b border-slate-200 pb-4">
+                          <p className="text-[10px] font-black text-slate-400 uppercase">AI Predicted Demand</p>
+                          <p className="text-3xl font-black text-indigo-600">{forecastResult.demand}</p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase">AI Prediction Accuracy</p>
+                          <p className="text-3xl font-black text-indigo-600">{forecastResult.confidence}%</p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase">Competitor Price</p>
+                          <p className="text-3xl font-black text-indigo-600">${competitorPrice}</p>
                           <p className="text-[10px] font-black text-slate-400 uppercase">AI Target Price</p>
-                          <p className="text-3xl font-black text-indigo-600">${forecastResult.price}</p>
+                          <p className="text-3xl font-black text-indigo-600">${forecastResult.predicted_upper}</p>
                        </div>
                        <div className="flex items-center justify-between">
                           <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${forecastResult.price <= competitorPrice ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>

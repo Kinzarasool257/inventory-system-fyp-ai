@@ -66,7 +66,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjI2LCJlb
 GET http://localhost:3002/StockData/inventory?store=WH-1&item=Book_1
 
 ######audit summary tab3
-GET http://localhost:3002/api/audit-summary?warehouse=WH-1&category=Books
+GET http://localhost:3002/api/audit-summary?store=WH-4&category=Books
 
 ####anomalies
 GET http://localhost:3002/api/anomalies
@@ -98,3 +98,35 @@ Content-Type: application/json
 ### Access admin Dashboard (Correct Role)
 GET http://localhost:3002/admin-dashboard
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjU4LCJlbWFpbCI6Im1haGFtMjZAZ21haWwuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzc3NTMyNDM4LCJleHAiOjE3Nzc1MzYwMzh9.uykXr-M4Tjm1Kr1jRnmuJxTINi6-VNxyBnMfr-dbor0
+
+### get competitor price based on item category store price and stock
+GET http://localhost:3002/competitor-price?store=WH-1&item=Book_1&stock=465&price=1336
+
+###total stock
+GET http://localhost:3002/stock/total-stock
+
+###total revenue
+GET http://localhost:3002/total-revenue
+
+### revenue by id
+GET http://localhost:3002/revenue/warehouse/WH-1
+
+####get stock
+GET http://localhost:3002/stock/warehouse-category-stock
+
+###post set capacity
+POST http://localhost:3002/ai/set-capacity
+Content-Type: application/json
+
+{
+  "warehouse": "WH-1",
+  "capacity": 100000
+}
+
+
+###get utilization
+GET http://localhost:3002/ai/space-utilization
+
+
+####avg competitor and our price 
+GET http://localhost:3002/market-audit/market-audit/WH-1

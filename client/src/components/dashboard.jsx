@@ -5,7 +5,6 @@ import Store2Dashboard from "./Store2Dashboard";
 import Store3Dashboard from "./Store3Dashboard";
 import Store4Dashboard from "./Store4Dashboard";
 import AdminDashboard from "./admindashboard";
-import Sidebar from "./admindashboard";
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [message, setMessage] = useState("");
@@ -50,7 +49,7 @@ export default function Dashboard() {
       {/* <button onClick={logout}>Logout</button> */}
 
       {/* Role-based dashboard */}
-      {user.role === "admin" && <Sidebar />}
+      {user.role === "admin" && <AdminDashboard />}
       {user.role === "store1" && <Store1Dashboard />}
       {user.role === "store2" && <Store2Dashboard />}
       {user.role === "store3" && <Store3Dashboard />}

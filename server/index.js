@@ -8,6 +8,7 @@ const fs = require('fs');
 const csv = require("csv-parser");
 const { spawn } = require("child_process");
 const path = require('path');
+const utilizationRoutes = require("./routes/utilizationRoutes");
 const inventoryRoutes = require('./routes/inventoryRoutes');
 require('dotenv').config();
 const { verifyToken, authorizeRoles } = require('./middleware/authMiddleware');
@@ -15,7 +16,9 @@ require('./backupScheduler');
 const auditRoutes = require("./routes/auditRoutes");
 const db = require('./db');
 const importExcelRoute = require('./routes/importExcelRoute');
-
+const stockRoutes = require('./routes/stockRoutes');
+const revenueRoutes = require('./routes/revenue');
+const marketAuditRoute = require("./routes/marketAudit");
 const app = express();
 
 app.use(express.json());
@@ -92,7 +95,7 @@ app.post("/api/predict", (req, res) => {
     });
 
     python.on("close", () => {
-        console.log(result)
+        
         res.json(JSON.parse(result));
     });
 
@@ -101,7 +104,7 @@ app.post("/api/predict", (req, res) => {
 // ✅ Signup route
 app.post('/signup', async (req, res) => {
   const { Email, Name, Password, role } = req.body;
-  console.log(role)
+  
   try {
     const hashedPassword = await bcrypt.hash(Password, 10);
     const SQL = 'INSERT INTO users (email, name, password , role) VALUES (?, ?, ?,?)';
@@ -200,13 +203,78 @@ app.get('/protected', (req, res) => {
     res.send({ message: 'Protected content accessed!', userId: decoded.userId });
   });
 });
+app.get('/competitor-price', async (req, res) => {
+  try {
+    const { store,  item, stock, price } = req.query;
 
+    const sql = `
+      SELECT Competitor_Price 
+      FROM cleaned_smart_stock 
+      WHERE Warehouse_ID = ? 
+      AND Product_Name = ? 
+      AND Stock_Level = ? 
+      AND Unit_Price = ?
+    `;
+
+    const result = await db.query(sql, [
+      store,
+      item,
+      stock,
+      price
+    ]);
+
+    // ✅ safe normalization
+    const rows = Array.isArray(result)
+      ? (Array.isArray(result[0]) ? result[0] : result)
+      : [];
+
+    if (rows.length === 0) {
+      const fallbackPrice =
+        price * (0.95 + Math.random() * 0.15);
+
+      return res.json({
+        competitor_price: Math.round(fallbackPrice), 
+      });
+    }
+
+    return res.json({
+      competitor_price: rows[0].Competitor_Price
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get('/total-revenue', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT COALESCE(SUM(Revenue), 0) AS totalRevenue
+      FROM vw_smart_stock_analysis
+    `);
+    
+    const totalRevenue = rows?.totalRevenue ?? 0;
+
+    res.json({
+      totalRevenue
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch revenue' });
+  }
+});
+app.use('/stock', stockRoutes);
 app.use("/api", auditRoutes);
 const chatRoutes = require('./routes/chat');
 app.use('/chat', chatRoutes);
+app.use("/stock", stockRoutes)
 app.use("/StockData", inventoryRoutes);
+app.use("/market-audit", marketAuditRoute);
 app.use('/', importExcelRoute);
-
+app.use("/ai", utilizationRoutes);
+app.use('/revenue', revenueRoutes);
 server.listen(3002, () => {
   
   console.log("🚀 Server + Socket.IO running on port 3002");
