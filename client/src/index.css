@@ -1,10 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
+:root {
+  /* Brand Colors from Image */
+  --ims-primary: #5271ff; /* Accent blue */
+  --ims-sidebar: #2b3a4a; /* Dark navy sidebar */
+  --ims-bg: #e2eff5;      /* Light sky blue background */
+  --ims-card: #ffffff;
+  --ims-border: #d1e2e8;
+  
+  /* Status Colors */
+  --ims-success: #70d6bc;
+  --ims-warning: #ffd08a;
+  --ims-danger: #ff8a8a;
+  --ims-info: #8ac0ff;
+}
+
+body {
   margin: 0;
-  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--ims-bg);
+  color: #334155;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Specific Sidebar Style from Image */
+.sidebar-theme {
+  background-color: var(--ims-sidebar);
+  color: #cbd5e1;
+}
+
+.sidebar-item-active {
+  background-color: var(--ims-primary);
+  color: white;
+}
+
+/* Card Style from Image */
+.ims-card {
+  background: var(--ims-card);
+  border: 1px solid var(--ims-border);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Input Fields Style */
+input, select {
+  background-color: #f8fafc;
+  border: 1px solid var(--ims-border);
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
 }

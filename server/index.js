@@ -14,6 +14,7 @@ require('dotenv').config();
 const { verifyToken, authorizeRoles } = require('./middleware/authMiddleware');
 require('./backupScheduler');
 const auditRoutes = require("./routes/auditRoutes");
+const automation = require("./routes/automation-log")
 const db = require('./db');
 const importExcelRoute = require('./routes/importExcelRoute');
 const stockRoutes = require('./routes/stockRoutes');
@@ -275,9 +276,8 @@ app.use("/market-audit", marketAuditRoute);
 app.use('/', importExcelRoute);
 app.use("/ai", utilizationRoutes);
 app.use('/revenue', revenueRoutes);
+app.use('/alert', automation)
 server.listen(3002, () => {
   
   console.log("🚀 Server + Socket.IO running on port 3002");
 });
-
-

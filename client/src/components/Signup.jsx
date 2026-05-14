@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
-import plantImage from '../assets/plants.png';
+import inventoryBg from '../assets/inventory_illustration.jpeg'; 
 import { ArrowLeft } from 'lucide-react';
+// Import the new logo image
+import smartStockLogo from '../assets/Smart Stock (4).png'; 
 import googleIcon from '../assets/google.png';
 import appleIcon from '../assets/apple.png';
 import { useNavigate, Link } from 'react-router-dom';
@@ -23,118 +24,120 @@ const Signup = () => {
       role: 'store1'
     })
       .then(() => {
-        setSuccessMessage('Account created successfully! Redirecting to login...');
-        // Clear form
+        setSuccessMessage('Account created successfully! Redirecting...');
         setEmail('');
         setName('');
         setPassword('');
-        // Redirect after 3 seconds
         setTimeout(() => {
           navigate('/login');
         }, 3000);
       })
       .catch((err) => {
         console.error(err);
-        setSuccessMessage(`Signup failed. Please try again.${err}`);
+        setSuccessMessage(`Signup failed. Please try again.`);
       });
   };
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen">
-      <div className="w-full md:w-1/2 flex justify-center items-center bg-white px-6 py-8">
+    <div className="flex flex-col md:flex-row w-full h-screen bg-[#e2eff5]">
+      <div className="w-full md:w-1/2 flex justify-center items-center bg-white/80 backdrop-blur-md px-6 py-8 relative z-10">
         <div className="w-full max-w-sm">
-          <div className="relative mb-6 flex items-center justify-center">
-  {/* Back Arrow */}
-  <button
-    onClick={() => navigate(-1)}
-    className="absolute left-0 text-gray-700 hover:text-black flex items-center"
-  >
-    <ArrowLeft size={26} />
-  </button>
+          <div className="relative mb-8 flex items-center justify-center">
+            <button
+              onClick={() => navigate(-1)}
+              className="absolute left-0 text-slate-400 hover:text-[#4b7291]"
+            >
+              <ArrowLeft size={26} />
+            </button>
+            {/* Logo Image added in place of text */}
+            <img src={smartStockLogo} alt="Smart Stock Manager" className="h-40 w-auto" />
+          </div>
 
-</div>
-
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Get Started Now</h2>
-          <p className="text-sm font-bold text-gray-600 mb-4">
-            Enter your credentials to create a new account
+          <h2 className="text-3xl font-black mb-2 text-slate-800 italic tracking-tighter uppercase">Join Network</h2>
+          <p className="text-sm font-bold text-slate-500 mb-6 uppercase tracking-widest">
+            Create your terminal credentials
           </p>
 
           {successMessage && (
-            <div className="bg-green-100 text-green-800 font-semibold px-4 py-2 rounded mb-4 text-sm">
+            <div className="bg-emerald-50 text-emerald-700 border border-emerald-100 font-black px-4 py-3 rounded-xl mb-4 text-xs uppercase tracking-widest text-center shadow-sm">
               {successMessage}
             </div>
           )}
 
-          <label className="text-sm font-bold mb-1 block">Name</label>
-          <input
-            type="text"
-            placeholder="Enter your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full border rounded px-3 py-2 mb-4"
-          />
+          <div className="space-y-4">
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block ml-1">Full Name</label>
+              <input
+                type="text"
+                placeholder="Operator Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#4b7291] shadow-inner"
+              />
+            </div>
 
-          <label className="text-sm font-bold mb-1 block">Email address</label>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded px-3 py-2 mb-4"
-          />
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block ml-1">Email address</label>
+              <input
+                type="email"
+                placeholder="name@smartstock.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#4b7291] shadow-inner"
+              />
+            </div>
 
-          <label className="text-sm font-bold mb-1 block">Password</label>
-          <input
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2 mb-4"
-          />
+            <div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block ml-1">Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#4b7291] shadow-inner"
+              />
+            </div>
 
-          <label className="text-sm mb-4 block font-bold">
-            <input type="checkbox" className="mr-2" />
-            Remember for 30 days
-          </label>
-
-          <button
-            className="bg-green-700 text-white w-full py-2 rounded hover:bg-green-800 mb-3 font-semibold"
-            onClick={createUser}
-          >
-            Sign Up
-          </button>
-
-          <div className="flex items-center my-3">
-            <hr className="flex-grow border-gray-300" />
-            <span className="px-3 text-gray-500">or</span>
-            <hr className="flex-grow border-gray-300" />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 mb-2 font-bold">
-            <button className="w-full py-2 rounded border flex items-center justify-center gap-2">
-              <img src={googleIcon} alt="Google" className="w-5 h-5" />
-              Signup with Google
-            </button>
-            <button className="w-full py-2 rounded border flex items-center justify-center gap-2">
-              <img src={appleIcon} alt="Apple" className="w-5 h-5" />
-              Signup with Apple
+            <button
+              className="bg-[#4b7291] text-white w-full py-4 rounded-2xl hover:bg-[#3a5a70] shadow-[0_10px_20px_rgba(75,114,145,0.3)] transition-all font-black uppercase text-xs tracking-[0.2em] active:scale-95 mt-4"
+              onClick={createUser}
+            >
+              Sign Up 
             </button>
           </div>
 
-          <p className="text-sm font-bold text-center mt-2">
-            Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 font-bold">
-              Login
+          <div className="flex items-center my-6">
+            <hr className="flex-grow border-slate-200" />
+            <span className="px-4 text-slate-400 font-black text-[10px] uppercase">OR</span>
+            <hr className="flex-grow border-slate-200" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 font-black uppercase text-[9px] tracking-widest">
+            <button className="w-full py-3 rounded-xl border border-slate-200 flex items-center justify-center gap-2 hover:bg-slate-50">
+              <img src={googleIcon} alt="Google" className="w-4 h-4" />
+              Google
+            </button>
+            <button className="w-full py-3 rounded-xl border border-slate-200 flex items-center justify-center gap-2 hover:bg-slate-50">
+              <img src={appleIcon} alt="Apple" className="w-4 h-4" />
+              Apple
+            </button>
+          </div>
+
+          <p className="text-[11px] font-bold text-center text-slate-500 uppercase tracking-wider">
+            Have an account?{' '}
+            <Link to="/login" className="text-[#4b7291] font-black hover:underline">
+              Terminal Login
             </Link>
           </p>
         </div>
       </div>
 
-      <div className="hidden md:flex w-1/2 items-center justify-end p-4">
+      {/* Right Section - Image maximized */}
+      <div className="hidden md:flex w-1/2 h-full bg-[#f8fafc]">
         <img
-          src={plantImage}
-          alt="plant"
-          className="w-full h-full object-cover rounded-xl"
+          src={inventoryBg}
+          alt="Inventory Illustration"
+          className="w-full h-full object-cover rounded-xl shadow-inner"
         />
       </div>
     </div>

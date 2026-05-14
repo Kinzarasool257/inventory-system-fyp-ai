@@ -12,11 +12,10 @@ import {
 import { 
   LayoutDashboard, Store, FileText, MessageSquare, 
   Package, DollarSign, AlertTriangle, Activity, Database,
-  ChevronDown, Menu, TrendingUp, BrainCircuit, Boxes
+  ChevronDown, Menu, TrendingUp, BrainCircuit, Boxes, X
 } from 'lucide-react';
 
 import TopNavbar from './TopNavbar';
-
 
 const AdminDashboard = () => {
   
@@ -25,6 +24,7 @@ const AdminDashboard = () => {
   const [selectedView, setSelectedView] = useState('overview'); 
   const [isStoreDropdownOpen, setIsStoreOpen] = useState(false);
   const [isAnomalyModalOpen, setIsAnomalyModalOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false); 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [revenue, setRevenue] = useState(0);
   const [marketAuditData, setMarketAuditData] = useState([]);
@@ -72,7 +72,6 @@ const AdminDashboard = () => {
       { category: 'Electronics', avgComp: 450, aiPredict: 445, demand: 150, trend: '-2.1%' },
       { category: 'Clothes', avgComp: 65, aiPredict: 62, demand: 580, trend: '+18.4%' }
     ],
-    // Category-wise anomalies for the Warehouse Sub-view
     categoryAnomalies: [
       { label: 'Books', count: '01', color: 'rose' },
       { label: 'Clothes', count: '02', color: 'amber' },
@@ -129,7 +128,6 @@ useEffect(() => {
 
       const breakdown = res.data?.breakdown || {};
 
-      // convert object → chart array
       const formatted = Object.entries(breakdown).map(
         ([wh, value]) => ({
           name: `Warehouse ${wh.split("-")[1]}`,
@@ -158,8 +156,6 @@ useEffect(() => {
             `http://localhost:3002/revenue/warehouse/${wh}`
           );
 
-        
-
           return {
             wh,
             revenue: res.data?.totalRevenue ?? 0
@@ -171,8 +167,6 @@ useEffect(() => {
       results.forEach(item => {
         revenueMap[item.wh] = Number(item.revenue);
       });
-
-      
 
       setWarehouseRevenue(revenueMap);
 
@@ -217,7 +211,7 @@ useEffect(() => {
   fetchRevenue();
 }, []);
 
-  const COLORS = ['#4F46E5', '#8B5CF6', '#EC4899', '#10B981'];
+  const COLORS = ['#4b7291', '#70d6bc', '#ffd08a', '#ff8a8a'];
   const whMap = { 'WH-1': 'Books', 'WH-2': 'Toys', 'WH-3': 'Electronics', 'WH-4': 'Clothes' };
 
   useEffect(() => {
@@ -231,183 +225,151 @@ useEffect(() => {
   }, []);
 
   const handleReportAction = async () => {
-  const doc = new jsPDF();
-  const timestamp = new Date().toLocaleString();
-  const isGlobal = selectedView === 'overview';
+    const doc = new jsPDF();
+    const timestamp = new Date().toLocaleString();
+    const isGlobal = selectedView === 'overview';
+    const categories = ['Books', 'Toys', 'Electronics', 'Clothes'];
 
-  const categories = ['Books', 'Toys', 'Electronics', 'Clothes'];
+    const fetchAllAudit = async (store) => {
+        try {
+            const results = await Promise.all(
+                categories.map(async (cat) => {
+                    const res = await axios.get(`http://localhost:3002/api/audit-summary?store=${store}&category=${cat}`);
+                    return { category: cat, data: res.data || {} };
+                })
+            );
+            return results;
+        } catch (err) {
+            console.error("Audit fetch error:", err);
+            return [];
+        }
+    };
 
-  // helper → fetch all category audit data
-  const fetchAllAudit = async (store) => {
-    try {
-      const results = await Promise.all(
-        categories.map(async (cat) => {
-          const res = await axios.get(
-            `http://localhost:3002/api/audit-summary?store=${store}&category=${cat}`
-          );
-          return {
-            category: cat,
-            data: res.data || {}
-          };
-        })
-      );
-      return results;
-    } catch (err) {
-      console.error("Audit fetch error:", err);
-      return [];
-    }
-  };
-
-  if (isGlobal) {
-    // ================= GLOBAL REPORT =================
-
-    doc.setFillColor(79, 70, 229);
-    doc.rect(0, 0, 210, 50, 'F');
-
+    doc.setFillColor(43, 58, 74); 
+    doc.rect(0, 0, 210, 45, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
+    doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("GLOBAL PERFORMANCE REPORT", 15, 28);
-
+    doc.text("SMARTSTOCK INTELLIGENCE REPORT", 15, 25);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Issued: ${timestamp}`, 15, 40);
+    doc.text(`REPORT TYPE: ${isGlobal ? "GLOBAL STRATEGIC OVERVIEW" : `TERMINAL AUDIT [${selectedView}]`}`, 15, 35);
+    doc.text(`GENERATED: ${timestamp}`, 140, 35);
 
+    let y = 60;
+    doc.setTextColor(43, 58, 74);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("01. Executive KPI Summary", 15, y);
+    doc.setDrawColor(209, 226, 232);
+    doc.line(15, y + 2, 195, y + 2);
+
+    y += 15;
+    doc.setFontSize(11);
+    doc.setTextColor(100, 116, 139);
+    doc.text("METRIC", 20, y);
+    doc.text("VALUE", 100, y);
+
+    y += 8;
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
+    const totalRevLabel = isGlobal ? "Total Network Revenue" : "Total Revenue";
+    const totalStockLabel = isGlobal ? "Total Network Stock" : "Total Stock Balance";
+    const revValue = isGlobal ? revenue : (warehouseRevenue[selectedView] || 0);
+    const stockValue = isGlobal ? stockData.total : (stockData.breakdown[selectedView] || 0);
 
-    doc.text(`Total Revenue: $${Number(revenue || 0).toLocaleString()}`, 15, 60);
-    doc.text(`Total Stock: ${Number(stockData?.total || 0).toLocaleString()}`, 15, 68);
+    const drawRow = (label, val, currentY) => {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, currentY - 5, 180, 8, 'F');
+        doc.setFont("helvetica", "normal");
+        doc.text(label, 20, currentY);
+        doc.setFont("helvetica", "bold");
+        doc.text(val, 100, currentY);
+    };
 
-    let y = 85;
+    drawRow(totalRevLabel, `$${Number(revValue).toLocaleString()}`, y);
+    y += 10;
+    drawRow(totalStockLabel, `${Number(stockValue).toLocaleString()} Units`, y);
 
-    doc.text("Warehouse Revenue:", 15, y);
-    Object.entries(warehouseRevenue || {}).forEach(([wh, rev]) => {
-      y += 7;
-      doc.text(`${wh}: $${Number(rev || 0).toLocaleString()}`, 20, y);
+    y += 20;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(43, 58, 74);
+    doc.text(isGlobal ? "02. Regional Revenue Performance" : "02. Category-Wise Stock Balance", 15, y);
+    doc.line(15, y + 2, 195, y + 2);
+
+    y += 12;
+    doc.setFontSize(10);
+    const breakdownData = isGlobal ? Object.entries(warehouseRevenue) : getWarehouseStockData(selectedView).map(i => [i.category, i.stock]);
+    breakdownData.forEach(([label, val], index) => {
+        if (index % 2 === 0) { doc.setFillColor(241, 245, 249); doc.rect(15, y - 5, 180, 8, 'F'); }
+        doc.setFont("helvetica", "normal");
+        doc.text(`${label}`, 20, y);
+        doc.text(isGlobal ? `$${Number(val).toLocaleString()}` : `${Number(val).toLocaleString()} Units`, 100, y);
+        y += 8;
     });
+
+    if (y > 220) { doc.addPage(); y = 20; } else { y += 15; }
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("03. Forensic Anomalies & Data Integrity", 15, y);
+    doc.line(15, y + 2, 195, y + 2);
+
+    y += 15;
+    const auditData = await fetchAllAudit(isGlobal ? "GLOBAL" : selectedView);
+    doc.setFillColor(75, 114, 145);
+    doc.rect(15, y - 7, 180, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.text("CATEGORY", 20, y);
+    doc.text("FIN. LOSS", 60, y);
+    doc.text("DATA GAPS", 95, y);
+    doc.text("DEAD STOCK", 130, y);
+    doc.text("MARKET GAPS", 165, y);
 
     y += 10;
-
-    doc.text("Space Utilization:", 15, y);
-    (utilizationData || []).forEach((u) => {
-      y += 7;
-      doc.text(`${u.warehouse}: ${u.utilization}% (${u.status})`, 20, y);
-    });
-
-    // ================= GLOBAL AUDIT (ALL 4 CATEGORIES) =================
-    y += 15;
-    doc.text("GLOBAL AUDIT SUMMARY (ALL CATEGORIES)", 15, y);
-
-    const auditData = await fetchAllAudit("GLOBAL");
-
-    auditData.forEach((item) => {
-      y += 10;
-      doc.setFont("helvetica", "bold");
-      doc.text(item.category, 15, y);
-
-      doc.setFont("helvetica", "normal");
-      y += 7;
-
-      doc.text(`Financial Loss: ${item.data.financial_loss || 0}`, 20, y);
-      y += 7;
-      doc.text(`Data Gaps: ${item.data.data_gaps || 0}`, 20, y);
-      y += 7;
-      doc.text(`Dead Stock: ${item.data.dead_stock || 0}`, 20, y);
-      y += 7;
-      doc.text(`Market Gaps: ${item.data.market_gaps || 0}`, 20, y);
-    });
-
-  } else {
-    // ================= WAREHOUSE REPORT =================
-
-    const whStock = stockData?.breakdown?.[selectedView] || 0;
-    const whRevenue = warehouseRevenue?.[selectedView] || 0;
-
-    doc.setFillColor(31, 41, 55);
-    doc.rect(0, 0, 210, 50, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text(`Warehouse Report: ${selectedView}`, 15, 28);
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Issued: ${timestamp}`, 15, 40);
-
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-
-    doc.text(`Total Stock: ${Number(whStock).toLocaleString()}`, 15, 60);
-    doc.text(`Revenue: $${Number(whRevenue).toLocaleString()}`, 15, 68);
-
-    let y = 85;
-
-    doc.text("Category-wise Stock:", 15, y);
-
-    (getWarehouseStockData(selectedView) || []).forEach((cat) => {
-      y += 7;
-      doc.text(`${cat.category}: ${cat.stock}`, 20, y);
-    });
-
-    // ================= AUDIT SUMMARY (ALL 4 CATEGORIES FIXED) =================
-    y += 15;
-    doc.text("AUDIT SUMMARY (ALL CATEGORIES)", 15, y);
-
-    const auditData = await fetchAllAudit(selectedView);
-
     auditData.forEach((item) => {
-      y += 10;
-      doc.setFont("helvetica", "bold");
-      doc.text(item.category, 15, y);
-
-      doc.setFont("helvetica", "normal");
-      y += 7;
-
-      doc.text(`Financial Loss: ${item.data.financial_loss || 0}`, 20, y);
-      y += 7;
-      doc.text(`Data Gaps: ${item.data.data_gaps || 0}`, 20, y);
-      y += 7;
-      doc.text(`Dead Stock: ${item.data.dead_stock || 0}`, 20, y);
-      y += 7;
-      doc.text(`Market Gaps: ${item.data.market_gaps || 0}`, 20, y);
+        doc.setDrawColor(226, 232, 240);
+        doc.line(15, y + 2, 195, y + 2);
+        doc.setFont("helvetica", "bold");
+        doc.text(item.category, 20, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${item.data.financial_loss || 0}`, 60, y);
+        doc.text(`${item.data.data_gaps || 0}`, 95, y);
+        doc.text(`${item.data.dead_stock || 0}`, 130, y);
+        doc.text(`${item.data.market_gaps || 0}`, 165, y);
+        y += 10;
     });
-  }
 
-  doc.save(`${selectedView}_Report.pdf`);
-  setIsReportModalOpen(false);
-};
-   const getUtilizationStatus = (value) => {
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text("Internal Document - SmartStock AI Terminal - Unauthorized duplication prohibited", 105, 285, { align: "center" });
+    doc.save(`${selectedView}_Professional_Report.pdf`);
+    setIsReportModalOpen(false);
+  };
+
+const getUtilizationStatus = (value) => {
   if (value > 100) return "Overloaded";
   if (value >= 80) return "Risky";
   if (value >= 40) return "Ideal";
   return "Underused";
 };
+
 const fetchMarketAudit = async (warehouseId) => {
   try {
-    const res = await axios.get(
-      `http://localhost:3002/market-audit/market-audit/${warehouseId}`
-    );
-   
+    const res = await axios.get(`http://localhost:3002/market-audit/market-audit/${warehouseId}`);
     setMarketAuditData(res.data || []);
-    
   } catch (err) {
     console.error("Market audit error:", err);
   }
 };
-  const fetchAuditSummary = async (store, category, index) => {
+
+const fetchAuditSummary = async (store, category, index) => {
   try {
-    setLoadingRow(index); // ✅ START loading
-
-    const res = await axios.get(
-      `http://localhost:3002/api/audit-summary?store=${store}&category=${category}`
-    );
-
+    setLoadingRow(index); 
+    const res = await axios.get(`http://localhost:3002/api/audit-summary?store=${store}&category=${category}`);
     const data = res.data;
-
     const updated = [...strategicData.marketBenchmarking];
-
     updated[index] = {
       ...updated[index],
       category,
@@ -416,52 +378,27 @@ const fetchMarketAudit = async (warehouseId) => {
       dead_stock: data.dead_stock || 0,
       market_gaps: data.market_gaps || 0
     };
-
-    setStrategicData(prev => ({
-      ...prev,
-      marketBenchmarking: updated
-    }));
-
+    setStrategicData(prev => ({ ...prev, marketBenchmarking: updated }));
   } catch (err) {
     console.error("Audit API error:", err);
   } finally {
-    setLoadingRow(null); // ✅ STOP loading
+    setLoadingRow(null); 
   }
 };
 
-const fetchWarehouseRevenue = async (whId) => {
-  try {
-    const res = await axios.get(
-      `http://localhost:3002/revenue/warehouse/${whId}`
-    );
-
-    return res.data.total_revenue || 0; // return value
-  } catch (err) {
-    console.error("Warehouse revenue error:", err);
-    return 0;
-  }
-};
-  const renderWarehouseSubView = (id) => (
-    
-    <div className="space-y-8 animate-in slide-in-from-right duration-500">
-      <div className="flex items-center justify-between">
-         <h2 className="text-xl font-black uppercase italic text-slate-800 tracking-tighter">Strategic Analysis: {id}</h2>
-         <span className="px-4 py-1 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase">Terminal Logic Active</span>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <StatCard label="Calculated Revenue" value={
-  warehouseRevenue[id] != null
-    ? `$${Number(warehouseRevenue[id]).toLocaleString()}`
-    : "Loading..."
-} icon={<DollarSign/>} color="indigo" />
-        <StatCard label="Total Stocks" value={stockData.breakdown[id]} icon={<Package/>} color="emerald" />
-        {/* Clickable Anomaly Count for Sub-view Category Breakdown */}
-        
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-          <h3 className="text-xs font-black uppercase text-slate-400 mb-8 flex items-center gap-2"><Boxes size={16}/> Stock Volume per Category</h3>
-          <div className="h-[300px]"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={getWarehouseStockData(id)}  innerRadius={60} outerRadius={90}
+const renderWarehouseSubView = (id) => (
+  <div className="space-y-6 animate-in slide-in-from-right duration-500">
+    <div className="flex items-center justify-between">
+       <h2 className="text-2xl font-black uppercase italic text-slate-800 tracking-tighter">Strategic Analysis: {id}</h2>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <StatCard label="Calculated Revenue" value={warehouseRevenue[id] != null ? `$${Number(warehouseRevenue[id]).toLocaleString()}` : "Loading..."} icon={<DollarSign/>} color="blue" />
+      <StatCard label="Total Stocks" value={stockData.breakdown[id]} icon={<Package/>} color="teal" />
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="ims-card p-6 shadow-xl bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/40">
+        <h3 className="text-[11px] font-black uppercase text-slate-500 mb-6 flex items-center gap-2 tracking-widest"><Boxes size={14}/> Stock Volume per Category</h3>
+        <div className="h-[280px]"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={getWarehouseStockData(id)}  innerRadius={60} outerRadius={85}
     paddingAngle={5}
     dataKey="stock"
     nameKey="category"
@@ -470,228 +407,209 @@ const fetchWarehouseRevenue = async (whId) => {
       <Cell key={index} fill={COLORS[index % COLORS.length]} />
     ))}
   </Pie>
-  <Tooltip formatter={(value, name, props) => [
-  value,
-  props.payload.category
-]} />
- <Legend
-  formatter={(value, entry, index) =>
-    getWarehouseStockData(id)[index]?.category
-  }
-/>
+  <Tooltip />
+ <Legend />
 </PieChart></ResponsiveContainer></div>
-        </div>
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-          <h3 className="text-xs font-black uppercase text-slate-400 mb-8 flex items-center gap-2"><BrainCircuit size={16} className="text-indigo-600"/> Market Intelligence Audit</h3>
-          <div className="h-[300px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={marketAuditData}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" /><XAxis dataKey="category" fontSize={10} fontWeight="bold" /><YAxis fontSize={10} /><Tooltip cursor={{fill: '#f8fafc'}} /><Legend /><Bar
+      </div>
+      <div className="ims-card p-6 shadow-xl bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/40">
+        <h3 className="text-[11px] font-black uppercase text-slate-500 mb-6 flex items-center gap-2 tracking-widest"><BrainCircuit size={14} className="text-[#4b7291]"/> Market Intelligence Audit</h3>
+        <div className="h-[280px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={marketAuditData}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#cbd5e1" /><XAxis dataKey="category" fontSize={10} fontWeight="900" /><YAxis fontSize={10} fontWeight="700" /><Tooltip cursor={{fill: '#f8fafc'}} /><Legend /><Bar
   name="Avg Competitor Price"
   dataKey="competitor_price"
-  fill="#94a3b8"
+  fill="#94a3b8" 
   radius={[4, 4, 0, 0]}
 />
-
 <Bar
   name="Avg Price"
   dataKey="unit_price"
-  fill="#4F46E5"
+  fill="#4b7291" 
   radius={[4, 4, 0, 0]}
 /></BarChart></ResponsiveContainer></div>
-        </div>
       </div>
-      <div className="bg-white/80 backdrop-blur-sm p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-  <h3 className="text-xs font-black uppercase text-slate-400 mb-6 tracking-widest">
-    Category-wise Stock
-  </h3>
-
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-    {getWarehouseStockData(id).map((item, i) => (
-      <div
-        key={i}
-        className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center hover:shadow-md transition"
-      >
-        {/* CATEGORY NAME */}
-        <p className="text-[10px] font-black text-indigo-600 uppercase mb-2">
-          {item.category}
-        </p>
-
-        {/* STOCK VALUE */}
-        <p className="text-2xl font-black text-slate-800">
-          {item.stock.toLocaleString()}
-        </p>
-
-        {/* LABEL */}
-        <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">
-          Total Stock Units
-        </p>
-      </div>
-    ))}
-  </div>
-</div>
     </div>
-  );
-
-  const renderOverview = () => (
-    <div className="space-y-10 animate-in fade-in duration-700">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <StatCard 
-  label="Total Stock" 
-  value={stockData.total} 
-  icon={<Package/>} 
-  color="indigo" 
-  breakdown={stockData.breakdown}
-/>
-        <StatCard label="Total Revenue" value={`$${revenue.toLocaleString()}`} icon={<DollarSign/>} color="emerald" />
-        {/* Clickable Total Anomalies for Global Breakdown */}
+    <div className="ims-card p-6 shadow-xl bg-white/70 backdrop-blur-md rounded-[2rem] border border-white/40">
+      <h3 className="text-[11px] font-black uppercase text-slate-500 mb-4 tracking-widest">Category-wise Stock</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {getWarehouseStockData(id).map((item, i) => (
+          <div key={i} className="p-6 bg-white/80 rounded-[1.5rem] border border-white/50 text-center shadow-sm hover:shadow-md transition-all">
+            <p className="text-[10px] font-black text-[#4b7291] uppercase mb-1 tracking-wider">{item.category}</p>
+            <p className="text-2xl font-black text-slate-800 tracking-tighter">{item.stock.toLocaleString()}</p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">Total Units</p>
+          </div>
+        ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-          <h3 className="text-xs font-black uppercase text-slate-400 mb-8 flex items-center gap-2"><Store size={16} /> Global Store Distribution</h3>
-          <div className="h-[300px]"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={globalDistribution} innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
+    </div>
+  </div>
+);
+
+const renderOverview = () => (
+  <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <StatCard 
+        label="Total Stock" 
+        value={stockData.total} 
+        icon={<Package/>} 
+        color="blue" 
+        clickable={true}
+        onClick={() => setIsStockModalOpen(true)} 
+      />
+      <StatCard label="Total Revenue" value={`$${revenue.toLocaleString()}`} icon={<DollarSign/>} color="teal" />
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="bg-white/70 backdrop-blur-md p-8 rounded-[2rem] shadow-lg border border-white/40">
+        <h3 className="text-[11px] font-black uppercase text-slate-500 mb-6 flex items-center gap-2 tracking-widest"><Store size={14} /> Global Store Distribution</h3>
+        <div className="h-[280px]"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={globalDistribution} innerRadius={60} outerRadius={90} paddingAngle={8} dataKey="value">
   {globalDistribution.map((entry, index) => (
     <Cell key={index} fill={COLORS[index % COLORS.length]} />
   ))}
 </Pie><Tooltip /><Legend layout="vertical" align="right" verticalAlign="middle" /></PieChart></ResponsiveContainer></div>
-        </div>
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-          <h3 className="text-xs font-black uppercase text-slate-400 mb-8 flex items-center gap-2"><Boxes size={16} /> Space Utilization AI</h3>
-          <div className="h-[300px]"><ResponsiveContainer width="100%" height="100%"><RadarChart cx="50%" cy="50%" outerRadius="80%" data={utilizationData}>
-  <PolarGrid />
-  <PolarAngleAxis dataKey="warehouse" />
+      </div>
+      <div className="bg-white/70 backdrop-blur-md p-8 rounded-[2rem] shadow-lg border border-white/40">
+        <h3 className="text-[11px] font-black uppercase text-slate-500 mb-6 flex items-center gap-2 tracking-widest"><Boxes size={14} /> Space Utilization AI</h3>
+        <div className="h-[280px]"><ResponsiveContainer width="100%" height="100%"><RadarChart cx="50%" cy="50%" outerRadius="80%" data={utilizationData}>
+  <PolarGrid stroke="#cbd5e1" strokeWidth={1}/>
+  <PolarAngleAxis dataKey="warehouse" fontSize={11} fontWeight="900" stroke="#475569"/>
   <Radar
   name="Utilization %"
   dataKey="utilization"
-  stroke="#4F46E5"
-  fill="#4F46E5"
+  stroke="#4b7291"
+  strokeWidth={2}
+  fill="#4b7291"
   fillOpacity={0.4}
 />
-  <Tooltip
-  formatter={(value, name, props) => [
-    `${value}%`,
-    `Status: ${props.payload.status}`
-  ]}
-/>
+  <Tooltip 
+    formatter={(value, name, props) => [
+      `Status: ${props.payload.status} : ${value}%`,
+      props.payload.warehouse
+    ]}
+  />
 </RadarChart></ResponsiveContainer></div>
-        </div>
       </div>
-      <section className="bg-white/80 backdrop-blur-sm p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-        <div className="flex justify-between items-center mb-8">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"> Anomalies Analysis</h3>
-            
-        </div>
-        <div className="overflow-x-auto">
-            <table className="w-full text-left border-separate border-spacing-y-3">
-                <thead><tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest"><th className="px-6 py-2">Warehouse</th><th className="px-6 py-2">Category</th><th className="px-6 py-2">financial_loss</th><th className="px-6 py-2">data_gaps</th><th className="px-6 py-2">dead_stock</th><th className="px-6 py-2 text-right">market_gaps</th></tr></thead>
-                <tbody className="text-xs font-bold">{strategicData.marketBenchmarking.map((row, i) => (<tr key={i} className="bg-white hover:bg-indigo-50/30 transition-colors"><td className="px-6 py-5 rounded-l-2xl border-y border-l border-slate-50">{row.id}</td><td className="px-6 py-5 border-y border-slate-50">
-  <select
-  disabled={loadingRow === i} // ✅ DISABLE CURRENT ROW
-  className={`bg-transparent border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold focus:outline-none ${
-    loadingRow === i ? 'opacity-50 cursor-not-allowed' : ''
-  }`}
-  value={row.category || ''}
-  onChange={(e) => {
-    const selectedCategory = e.target.value;
-    fetchAuditSummary(row.id, selectedCategory, i);
-  }}
->
-  
-    <option value="">Select</option>
-    {categories.map((cat) => (
-      <option key={cat} value={cat}>{cat}</option>
-    ))}
-  </select>
-</td><td className="px-6 py-5 border-y border-slate-50">
-  {row.financial_loss}
-</td><td className="px-6 py-5 border-y border-slate-50">
-  {row.data_gaps}
-</td>
-<td className="px-6 py-5 border-y border-slate-50">
-  {row.dead_stock}
-</td> <td className="px-6 py-5 border-y border-slate-50 text-right">
-  {row.market_gaps}
-</td></tr>))}</tbody>
-            </table>
-        </div>
-      </section>
     </div>
-  ); 
+    <section className="bg-white/60 backdrop-blur-lg p-8 rounded-[2rem] shadow-xl border border-white/50">
+      <div className="flex justify-between items-center mb-8">
+          <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-600 flex items-center gap-2 italic">
+            <AlertTriangle size={16} className="text-rose-500" /> Anomalies Analysis
+          </h3>
+      </div>
+      <div className="overflow-x-auto">
+          <table className="w-full text-left border-separate border-spacing-y-3">
+              <thead><tr className="text-[10px] font-black uppercase text-slate-500 tracking-widest"><th className="px-6 py-3">Warehouse</th><th className="px-6 py-3">Category</th><th className="px-6 py-3 text-center">financial loss</th><th className="px-6 py-3 text-center">data gaps</th><th className="px-6 py-3 text-center">dead stock</th><th className="px-6 py-3 text-right">market gaps</th></tr></thead>
+              <tbody className="text-[12px] font-black text-slate-800">
+                {strategicData.marketBenchmarking.map((row, i) => (
+                  <tr key={i} className="group transition-all">
+                    <td className="px-6 py-5 rounded-l-2xl bg-white/90 border-y border-l border-white shadow-sm">{row.id}</td>
+                    <td className="px-6 py-5 bg-white/90 border-y border-white shadow-sm">
+                      <select
+                      disabled={loadingRow === i} 
+                      className={`bg-slate-100/50 border border-slate-200 rounded-lg px-2 py-1 text-[11px] font-black focus:outline-none focus:border-[#4b7291] transition-all cursor-pointer ${loadingRow === i ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      value={row.category || ''}
+                      onChange={(e) => fetchAuditSummary(row.id, e.target.value, i)}
+                      >
+                          <option value="">Select Category</option>
+                          {categories.map((cat) => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                      </select>
+                    </td>
+                    <td className="px-6 py-5 bg-white/90 border-y border-white shadow-sm text-center text-rose-600">{row.financial_loss}</td>
+                    <td className="px-6 py-5 bg-white/90 border-y border-white shadow-sm text-center text-amber-600">{row.data_gaps}</td>
+                    <td className="px-6 py-5 bg-white/90 border-y border-white shadow-sm text-center text-indigo-600">{row.dead_stock}</td>
+                    <td className="px-6 py-5 rounded-r-2xl bg-white/90 border-y border-r border-white shadow-sm text-right text-[#4b7291]">{row.market_gaps}</td>
+                  </tr>
+                ))}
+              </tbody>
+          </table>
+      </div>
+    </section>
+  </div>
+); 
 
   return (
-    <div className="flex min-h-screen font-sans relative overflow-hidden" 
-         style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}>
-      <div className="absolute inset-0 bg-white/85 backdrop-blur-[2px] z-0"></div>
+    <div 
+      className="flex min-h-screen font-sans relative overflow-hidden bg-[#e2eff5]"
+      style={{
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-black/5 backdrop-blur-[3px] z-0"></div>
 
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/95 backdrop-blur-md border-r border-slate-200 transition-all ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0`}>
-        <div className="p-8 h-full flex flex-col">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#2b3a4a]/95 backdrop-blur-xl border-r border-white/10 transition-all ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0`}>
+        <div className="p-6 h-full flex flex-col">
           <div className="flex items-center gap-3 mb-10">
-            <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg text-white"><Database size={22} /></div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-800 uppercase italic">Admin Dashboard</h1>
+            <div className="p-2 bg-[#4b7291] rounded-xl shadow-lg text-white"><Database size={20} /></div>
+            <h1 className="text-lg font-black tracking-tighter text-white uppercase italic">Admin Terminal</h1>
           </div>
           <nav className="space-y-1 flex-1">
-            <NavItem icon={<LayoutDashboard size={20}/>} label="Overview" active={selectedView === 'overview'} onClick={() => setSelectedView('overview')} />
+            <NavItem icon={<LayoutDashboard size={18}/>} label="Dashboard" active={selectedView === 'overview'} onClick={() => setSelectedView('overview')} />
             <div className="relative">
-              <button onClick={() => setIsStoreOpen(!isStoreDropdownOpen)} className="w-full flex items-center justify-between p-4 rounded-2xl text-slate-400 hover:bg-indigo-50 transition-all font-bold uppercase text-[11px]">
-                 <div className="flex items-center gap-4"><Store size={20}/> <span>Warehouses</span></div>
-                 <ChevronDown size={14} className={isStoreDropdownOpen ? "rotate-180" : ""} />
+              <button onClick={() => setIsStoreOpen(!isStoreDropdownOpen)} className="w-full flex items-center justify-between p-4 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white transition-all font-black uppercase text-[10px] tracking-widest">
+                 <div className="flex items-center gap-3"><Store size={18}/> <span>Inventory</span></div>
+                 <ChevronDown size={12} className={`transition-transform duration-300 ${isStoreDropdownOpen ? "rotate-180" : ""}`} />
               </button>
               {isStoreDropdownOpen && (
-                <div className="ml-8 mt-2 space-y-2 border-l-2 border-slate-100 pl-4">
+                <div className="ml-8 mt-1 space-y-1 border-l-2 border-[#4b7291]/30 pl-4 animate-in slide-in-from-top-2">
                   {['WH-1', 'WH-2', 'WH-3', 'WH-4'].map(wh => (
-                    <button key={wh} onClick={() => {
-  setSelectedView(wh);
-  fetchMarketAudit(wh);
-}} className={`block text-[11px] font-bold uppercase transition-colors ${selectedView === wh ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-900'}`}>Warehouse 0{wh.split('-')[1]}</button>
+                    <button key={wh} onClick={() => { setSelectedView(wh); fetchMarketAudit(wh); }} className={`block text-[10px] font-black uppercase text-left w-full p-2 transition-all ${selectedView === wh ? 'text-[#70d6bc]' : 'text-slate-400 hover:text-white'}`}>Warehouse 0{wh.split('-')[1]}</button>
                   ))}
                 </div>
               )}
             </div>
-            <NavItem icon={<FileText size={20}/>} label="Generate Report" onClick={() => setIsReportModalOpen(true)} />
-            <NavItem icon={<MessageSquare size={20}/>} label="Admin Chat" onClick={() => navigate('/admin-chat')} />
+            <NavItem icon={<FileText size={18}/>} label="Full Analytics" onClick={() => setIsReportModalOpen(true)} />
+            {/* <NavItem icon={<MessageSquare size={18}/>} label="Strategic Hub" onClick={() => navigate('/admin-chat')} /> */}
           </nav>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
         <TopNavbar setSidebarOpen={setSidebarOpen} isSidebarOpen={isSidebarOpen} />
-        <main className="p-8 lg:p-12 overflow-y-auto">
+        <main className="p-6 lg:p-10 overflow-y-auto">
           {selectedView === 'overview' ? renderOverview() : renderWarehouseSubView(selectedView)}
         </main>
       </div>
 
-      {/* DUAL-MODE ANOMALY MODAL */}
-      {isAnomalyModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setIsAnomalyModalOpen(false)}></div>
-          <div className="relative bg-white w-full max-w-2xl rounded-[3rem] p-12 shadow-2xl">
-             <h3 className="text-2xl font-black italic uppercase text-slate-800 mb-8 border-b pb-4">
-               {selectedView === 'overview' ? 'Global Anomalies' : `${selectedView} Category Anomalies`}
-             </h3>
-             <div className="space-y-4">
-                {selectedView === 'overview' ? (
-                  // Global Overview Breakdown (image_d63332.jpg)
-                  <>
-                    <AnomalyRow store="Warehouse 01" count="04" color="rose" />
-                    <AnomalyRow store="Warehouse 02" count="02" color="amber" />
-                    <AnomalyRow store="Warehouse 03" count="06" color="rose" />
-                    <AnomalyRow store="Warehouse 04" count="01" color="emerald" />
-                  </>
-                ) : (
-                  // Specific Warehouse Category Breakdown (image_d5d57e.jpg)
-                  strategicData.categoryAnomalies.map((a, idx) => (
-                    <AnomalyRow key={idx} store={a.label} count={a.count} color={a.color} />
-                  ))
-                )}
+      {isStockModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl">
+          <div className="absolute inset-0 bg-slate-900/60" onClick={() => setIsStockModalOpen(false)}></div>
+          <div className="relative bg-white/95 w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl overflow-hidden border border-white">
+             <button onClick={() => setIsStockModalOpen(false)} className="absolute top-8 right-8 p-3 bg-slate-50 rounded-xl hover:bg-rose-50 hover:text-rose-50 transition-all text-slate-400">
+               <X size={20} />
+             </button>
+             <div className="flex items-center gap-4 mb-8">
+                <div className="p-4 bg-[#4b7291] text-white rounded-2xl shadow-lg"><Package size={22}/></div>
+                <h3 className="text-2xl font-black italic uppercase text-slate-800 tracking-tighter">Global Inventory</h3>
+             </div>
+             <div className="space-y-6">
+                {Object.entries(stockData.breakdown).map(([wh, val]) => (
+                  <div key={wh} className="group">
+                    <div className="flex justify-between items-end mb-2">
+                       <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Warehouse 0{wh.split('-')[1]}</p>
+                       <p className="text-xl font-black text-[#4b7291] italic">{val.toLocaleString()} Units</p>
+                    </div>
+                    <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                       <div className="h-full bg-gradient-to-r from-[#4b7291] to-[#70d6bc] rounded-full transition-all duration-1000 ease-out" style={{ width: `${(val / stockData.total) * 100}%` }} />
+                    </div>
+                  </div>
+                ))}
              </div>
           </div>
         </div>
       )}
 
       {isReportModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setIsReportModalOpen(false)}></div>
-          <div className="relative bg-white w-full max-w-lg rounded-[3rem] p-10 shadow-2xl text-center">
-             <FileText size={48} className="mx-auto text-indigo-600 mb-6" />
-             <h3 className="text-xl font-black uppercase text-slate-800 mb-4">{selectedView === 'overview' ? 'Global Strategy Hub' : `Terminal Report: ${selectedView}`}</h3>
-             <button onClick={handleReportAction} className="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black uppercase text-xs shadow-xl transition-all">Download Report</button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl">
+          <div className="absolute inset-0 bg-slate-900/60" onClick={() => setIsReportModalOpen(false)}></div>
+          <div className="relative bg-white/95 w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl text-center border border-white">
+             <div className="w-20 h-24 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+               <FileText size={40} className="text-[#4b7291]" />
+             </div>
+             <h3 className="text-xl font-black italic uppercase text-slate-800 mb-4 tracking-tighter">{selectedView === 'overview' ? 'Strategic Intelligence Hub' : `Terminal Report: ${selectedView}`}</h3>
+             <p className="text-slate-500 font-bold uppercase text-[9px] tracking-[0.3em] mb-8">Generative BI Export</p>
+             <button onClick={handleReportAction} className="w-full bg-[#4b7291] hover:bg-[#3a5a70] text-white py-5 rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95">Download PDF Analytics</button>
           </div>
         </div>
       )}
@@ -699,53 +617,34 @@ const fetchWarehouseRevenue = async (whId) => {
   );
 };
 
-const StatCard = ({ label, value, icon, color, onClick, clickable, breakdown }) => (
+const StatCard = ({ label, value, icon, color, onClick, clickable }) => (
   <div
     onClick={onClick}
-    className={`bg-white/90 p-8 rounded-[2.5rem] border border-slate-100 flex items-start gap-6 shadow-sm transition-all w-full ${
-      clickable ? 'cursor-pointer hover:shadow-indigo-100 hover:translate-y-[-5px]' : ''
-    }`}
+    className={`bg-white/80 backdrop-blur-lg p-8 rounded-[2rem] border border-white/60 flex items-start gap-6 shadow-lg transition-all duration-300 w-full ${clickable ? 'cursor-pointer hover:shadow-xl group' : ''}`}
   >
-    {/* ICON */}
-    <div className={`p-5 bg-${color}-50 text-${color}-600 rounded-3xl flex-shrink-0`}>
+    <div className={`p-5 bg-slate-50 text-[#4b7291] rounded-2xl flex-shrink-0 shadow-inner group-hover:bg-[#4b7291] group-hover:text-white transition-all`}>
       {icon}
     </div>
-
-    {/* TEXT CONTENT */}
     <div className="min-w-0 flex-1">
-      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">
-        {label}
+      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">{label}</p>
+      <p className="text-3xl font-black text-slate-900 italic break-words leading-none tracking-tighter">
+        {typeof value === 'number' ? value.toLocaleString() : value}
       </p>
-
-      {/* VALUE (FIXED ALIGNMENT) */}
-      <p className="text-3xl font-black text-slate-800 italic break-words leading-tight">
-        {value}
-      </p>
-
-      {/* BREAKDOWN */}
-      {breakdown && (
-        <div className="text-[10px] text-slate-500 mt-2 space-y-1 break-words">
-          {Object.entries(breakdown).map(([wh, val]) => (
-            <div key={wh} className="flex justify-between gap-2">
-              <span>{wh}</span>
-              <span className="font-bold text-slate-700">{val}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {clickable && <p className="text-[9px] font-black text-[#4b7291] mt-3 uppercase tracking-wider animate-pulse italic">click to see the breakdown →</p>}
     </div>
   </div>
 );
+
 const NavItem = ({ icon, label, active, onClick }) => (
-  <div onClick={onClick} className={`flex items-center gap-4 px-6 py-4 rounded-2xl cursor-pointer transition-all ${active ? 'bg-indigo-600 text-white shadow-indigo-100 shadow-xl' : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600'}`}>
-    {icon} <span className="text-[11px] font-bold uppercase tracking-[0.15em]">{label}</span>
+  <div onClick={onClick} className={`flex items-center gap-3 px-5 py-4 rounded-xl cursor-pointer transition-all duration-300 ${active ? 'bg-[#4b7291] text-white shadow-lg' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
+    {icon} <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
   </div>
 );
 
 const AnomalyRow = ({ store, count, color }) => (
-    <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100">
-        <p className="font-bold text-slate-700 uppercase">{store}</p>
-        <span className={`px-4 py-1.5 rounded-full bg-${color}-100 text-${color}-600 text-xs font-black`}>{count} Anomalies</span>
+    <div className="flex items-center justify-between p-6 bg-white/50 rounded-2xl border border-white shadow-sm transition-all">
+        <p className="font-black text-slate-800 uppercase tracking-widest text-[11px]">{store}</p>
+        <span className={`px-4 py-1.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black shadow-sm italic`}>{count} Anomalies Detected</span>
     </div>
 );
 

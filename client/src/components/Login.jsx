@@ -1,175 +1,16 @@
-// import React, { useState, useEffect } from 'react';
-// import { useNavigate, Link } from 'react-router-dom';
-// import plantImage from '../assets/plants.png';
-// import { ArrowLeft } from 'lucide-react';
-// import googleIcon from '../assets/google.png';
-// import appleIcon from '../assets/apple.png';
-// import Axios from 'axios';
-// import { useAuth } from "../context/AuthContext";
-
-// const Login = () => {
-//   const { setUser } = useAuth(); // ✅ use AuthContext
-//   const [loginEmail, setLoginEmail] = useState('');
-//   const [loginPassword, setLoginPassword] = useState('');
-//   const [loginError, setLoginError] = useState('');
-//   const navigate = useNavigate();
-
-//   const loginUser = async (e) => {
-//     e.preventDefault();
-//     try {
-//       const response = await Axios.post('http://localhost:3002/login', {
-//         LoginEmail: loginEmail,
-//         LoginPassword: loginPassword,
-//       });
-      
-//       const data = response.data;
-      
-
-//       if (data.token && data.user) {
-//         // ✅ Save token for API calls
-//         localStorage.setItem('token', data.token);
-
-//         // ✅ Save user in React Context
-//         setUser(data.user);
-
-//         // Clear form
-//         setLoginEmail('');
-//         setLoginPassword('');
-//         setLoginError('');
-
-//         // ✅ Navigate to dashboard or role-specific page
-//         navigate('/dashboard');
-//       } else {
-//         setLoginError(data.message || 'Invalid credentials');
-//       }
-//     } catch (error) {
-//       setLoginError('Something went wrong. Try again.');
-//     }
-//   };
-
-//   // Clear error after 4 seconds
-//   useEffect(() => {
-//     if (loginError) {
-//       const timer = setTimeout(() => setLoginError(''), 4000);
-//       return () => clearTimeout(timer);
-//     }
-//   }, [loginError]);
-
-//   return (
-//     <div className="flex flex-col md:flex-row w-full h-screen">
-//       {/* Left Section */}
-//       <div className="w-full md:w-1/2 flex justify-center items-center bg-white px-6 py-8">
-//         <div className="w-full max-w-sm">
-//           {/* Top Row */}
-//           <div className="relative mb-6 flex items-center justify-center">
-//             <button
-//               onClick={() => navigate(-1)}
-//               className="absolute left-0 text-gray-700 hover:text-black flex items-center"
-//             >
-//               <ArrowLeft size={26} />
-//             </button>
-//             <div className="bg-black text-white rounded-[10px] px-4 py-2 text-lg font-bold">
-//               Logo
-//             </div>
-//           </div>
-
-//           <h2 className="text-2xl sm:text-3xl font-bold mb-2">Welcome!</h2>
-//           <p className="text-sm font-bold text-gray-600 mb-4">
-//             Enter your credentials to access your account
-//           </p>
-
-//           {loginError && (
-//             <div className="bg-red-500 text-white px-4 py-2 rounded mb-4 font-bold text-center">
-//               {loginError}
-//             </div>
-//           )}
-
-//           <label className="block font-bold text-sm text-gray-700 mb-1">
-//             Email address
-//           </label>
-//           <input
-//             type="email"
-//             value={loginEmail}
-//             placeholder="Enter your email"
-//             onChange={(e) => setLoginEmail(e.target.value)}
-//             className="w-full border rounded px-3 py-2 mb-3"
-//           />
-
-//           <div className="flex justify-between items-end mb-1">
-//             <label className="block text-sm text-gray-700 font-bold">Password</label>
-//             <a href="#" className="text-sm text-blue-600 font-bold">Forgot password?</a>
-//           </div>
-//           <input
-//             type="password"
-//             value={loginPassword}
-//             placeholder="Enter your password"
-//             onChange={(e) => setLoginPassword(e.target.value)}
-//             className="w-full border rounded px-3 py-2 mb-3"
-//           />
-
-//           <div className="flex items-center text-sm mb-4">
-//             <label className="font-bold">
-//               <input type="checkbox" className="mr-1" /> Remember for 30 days
-//             </label>
-//           </div>
-
-//           <button
-//             className="bg-green-700 text-white w-full py-2 rounded hover:bg-green-800 mb-3 font-bold"
-//             onClick={loginUser}
-//           >
-//             Login
-//           </button>
-
-//           <div className="flex items-center my-3">
-//             <hr className="flex-grow border-gray-300" />
-//             <span className="px-3 text-gray-500 font-bold">or</span>
-//             <hr className="flex-grow border-gray-300" />
-//           </div>
-
-//           <div className="flex flex-col sm:flex-row gap-2 mb-2 font-bold">
-//             <button className="w-full py-2 rounded border flex items-center justify-center gap-2">
-//               <img src={googleIcon} alt="Google" className="w-5 h-5" />
-//               Signup with Google
-//             </button>
-//             <button className="w-full py-2 rounded border flex items-center justify-center gap-2">
-//               <img src={appleIcon} alt="Apple" className="w-5 h-5" />
-//               Signup with Apple
-//             </button>
-//           </div>
-
-//           <p className="text-sm font-bold text-center mt-2">
-//             Don’t have an account?{' '}
-//             <Link to="/signup" className="text-blue-600 font-bold">
-//               Sign Up
-//             </Link>
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* Right Section */}
-//       <div className="hidden md:flex w-1/2 items-center justify-end p-4">
-//         <img
-//           src={plantImage}
-//           alt="plant"
-//           className="w-full h-full object-cover rounded-xl"
-//         />
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Login;
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import plantImage from '../assets/plants.png';
+import inventoryBg from '../assets/inventory_illustration.jpeg'; 
 import { ArrowLeft } from 'lucide-react';
+// Import the new logo image
+import smartStockLogo from '../assets/Smart Stock (4).png'; 
 import googleIcon from '../assets/google.png';
 import appleIcon from '../assets/apple.png';
 import Axios from 'axios';
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
-  const { login } = useAuth(); // ✅ use login() from context
+  const { login } = useAuth(); 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -186,19 +27,14 @@ const Login = () => {
       const data = response.data;
 
       if (data.token && data.user) {
-        // ✅ Save user + token in AuthContext (in-memory)
         login({
           name: data.user.name,
           role: data.user.role,
           token: data.token,
         });
-
-        // Clear form
         setLoginEmail('');
         setLoginPassword('');
         setLoginError('');
-
-        // Navigate to dashboard
         navigate('/dashboard');
       } else {
         setLoginError(data.message || 'Invalid credentials');
@@ -209,7 +45,6 @@ const Login = () => {
     }
   };
 
-  // Clear error after 4 seconds
   useEffect(() => {
     if (loginError) {
       const timer = setTimeout(() => setLoginError(''), 4000);
@@ -218,102 +53,107 @@ const Login = () => {
   }, [loginError]);
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen">
-      {/* Left Section */}
-      <div className="w-full md:w-1/2 flex justify-center items-center bg-white px-6 py-8">
+    <div className="flex flex-col md:flex-row w-full h-screen bg-[#e2eff5]">
+      {/* Left Section - Form */}
+      <div className="w-full md:w-1/2 flex justify-center items-center bg-white/80 backdrop-blur-md px-6 py-8 relative z-10">
         <div className="w-full max-w-sm">
-          {/* Top Row */}
-          <div className="relative mb-6 flex items-center justify-center">
+          <div className="relative mb-8 flex items-center justify-center">
             <button
               onClick={() => navigate(-1)}
-              className="absolute left-0 text-gray-700 hover:text-black flex items-center"
+              className="absolute left-0 text-slate-400 hover:text-[#4b7291] transition-colors"
             >
               <ArrowLeft size={26} />
             </button>
-            <div className="bg-black text-white rounded-[10px] px-4 py-2 text-lg font-bold">
-              Logo
-            </div>
+            {/* Logo Image added in place of text */}
+            <img src={smartStockLogo} alt="Smart Stock Manager" className="h-40 w-auto" />
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2">Welcome!</h2>
-          <p className="text-sm font-bold text-gray-600 mb-4">
-            Enter your credentials to access your account
+          <h2 className="text-3xl font-black mb-2 text-slate-800 italic tracking-tighter uppercase">Welcome back!</h2>
+          <p className="text-sm font-bold text-slate-500 mb-6 uppercase tracking-widest">
+            Access your inventory terminal
           </p>
 
           {loginError && (
-            <div className="bg-red-500 text-white px-4 py-2 rounded mb-4 font-bold text-center">
+            <div className="bg-rose-500 text-white px-4 py-3 rounded-xl mb-4 font-black text-xs uppercase tracking-widest text-center shadow-lg">
               {loginError}
             </div>
           )}
 
-          <label className="block font-bold text-sm text-gray-700 mb-1">
-            Email address
-          </label>
-          <input
-            type="email"
-            value={loginEmail}
-            placeholder="Enter your email"
-            onChange={(e) => setLoginEmail(e.target.value)}
-            className="w-full border rounded px-3 py-2 mb-3"
-          />
+          <div className="space-y-4">
+            <div>
+              <label className="block font-black text-[10px] text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">
+                Email address
+              </label>
+              <input
+                type="email"
+                value={loginEmail}
+                placeholder="admin@smartstock.com"
+                onChange={(e) => setLoginEmail(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#4b7291] transition-all shadow-inner"
+              />
+            </div>
 
-          <div className="flex justify-between items-end mb-1">
-            <label className="block text-sm text-gray-700 font-bold">Password</label>
-            <a href="#" className="text-sm text-blue-600 font-bold">Forgot password?</a>
-          </div>
-          <input
-            type="password"
-            value={loginPassword}
-            placeholder="Enter your password"
-            onChange={(e) => setLoginPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2 mb-3"
-          />
+            <div>
+              <div className="flex justify-between items-end mb-2">
+                <label className="block font-black text-[10px] text-slate-400 uppercase tracking-[0.2em] ml-1">Password</label>
+                <a href="#" className="text-[10px] text-[#4b7291] font-black uppercase tracking-widest hover:underline">Forgot?</a>
+              </div>
+              <input
+                type="password"
+                value={loginPassword}
+                placeholder="••••••••"
+                onChange={(e) => setLoginPassword(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#4b7291] transition-all shadow-inner"
+              />
+            </div>
 
-          <div className="flex items-center text-sm mb-4">
-            <label className="font-bold">
-              <input type="checkbox" className="mr-1" /> Remember for 30 days
-            </label>
-          </div>
+            <div className="flex items-center text-[11px] mb-6">
+              <label className="font-bold text-slate-600 flex items-center cursor-pointer">
+                <input type="checkbox" className="mr-2 accent-[#4b7291] h-4 w-4" /> 
+                <span className="uppercase tracking-wider">Keep me logged in</span>
+              </label>
+            </div>
 
-          <button
-            className="bg-green-700 text-white w-full py-2 rounded hover:bg-green-800 mb-3 font-bold"
-            onClick={loginUser}
-          >
-            Login
-          </button>
-
-          <div className="flex items-center my-3">
-            <hr className="flex-grow border-gray-300" />
-            <span className="px-3 text-gray-500 font-bold">or</span>
-            <hr className="flex-grow border-gray-300" />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 mb-2 font-bold">
-            <button className="w-full py-2 rounded border flex items-center justify-center gap-2">
-              <img src={googleIcon} alt="Google" className="w-5 h-5" />
-              Signup with Google
-            </button>
-            <button className="w-full py-2 rounded border flex items-center justify-center gap-2">
-              <img src={appleIcon} alt="Apple" className="w-5 h-5" />
-              Signup with Apple
+            <button
+              className="bg-[#4b7291] text-white w-full py-4 rounded-2xl hover:bg-[#3a5a70] shadow-[0_10px_20px_rgba(75,114,145,0.3)] transition-all font-black uppercase text-xs tracking-[0.2em] active:scale-95"
+              onClick={loginUser}
+            >
+              Login 
             </button>
           </div>
 
-          <p className="text-sm font-bold text-center mt-2">
-            Don’t have an account?{' '}
-            <Link to="/signup" className="text-blue-600 font-bold">
-              Sign Up
+          <div className="flex items-center my-6">
+            <hr className="flex-grow border-slate-200" />
+            <span className="px-4 text-slate-400 font-black text-[10px] uppercase">OR</span>
+            <hr className="flex-grow border-slate-200" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 mb-6 font-black uppercase text-[9px] tracking-widest">
+            <button className="w-full py-3 rounded-xl border border-slate-200 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all">
+              <img src={googleIcon} alt="Google" className="w-4 h-4" />
+              Google
+            </button>
+            <button className="w-full py-3 rounded-xl border border-slate-200 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all">
+              <img src={appleIcon} alt="Apple" className="w-4 h-4" />
+              Apple
+            </button>
+          </div>
+
+          <p className="text-[11px] font-bold text-center text-slate-500 uppercase tracking-wider">
+            No access?{' '}
+            <Link to="/signup" className="text-[#4b7291] font-black hover:underline">
+              Request Signup
             </Link>
           </p>
         </div>
       </div>
 
-      {/* Right Section */}
-      <div className="hidden md:flex w-1/2 items-center justify-end p-4">
+      {/* Right Section - Image maximized */}
+      <div className="hidden md:flex w-1/2 h-full bg-[#f8fafc]">
         <img
-          src={plantImage}
-          alt="plant"
-          className="w-full h-full object-cover rounded-xl"
+          src={inventoryBg}
+          alt="Inventory Illustration"
+          className="w-full h-full object-cover rounded-xl shadow-inner"
         />
       </div>
     </div>

@@ -1,223 +1,479 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { jsPDF } from 'jspdf';
+import { useNavigate } from 'react-router-dom';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, RadarChart, PolarGrid, PolarAngleAxis, Radar, PolarRadiusAxis, CartesianGrid } from 'recharts';
 import { 
   TrendingUp, BarChart3, ShieldCheck, BrainCircuit, Activity,
-  Truck, AlertCircle, Eye, Gauge, ArrowRight, Search, 
-  FileText, DollarSign, Package, AlertTriangle, LayoutDashboard,
-  Settings, Database, Bell, User, Menu, X, Download, ShieldAlert,
-  Layers, ShoppingCart
+  Truck, AlertCircle, Eye, Gauge, ArrowRight, FileText, 
+  DollarSign, Package, AlertTriangle, LayoutDashboard, Database, 
+  Menu, X, Download, ShieldAlert, Layers, ShoppingCart, 
+  ArrowDownCircle, ArrowUpCircle, Scale, Zap, Boxes, MessageSquare, LineChart
 } from 'lucide-react';
 
-const Store2Dashboard = () => {
-  // 1. DYNAMIC AUTH & ROLE MANAGEMENT
-  // Retrieve user data from your AuthContext or LocalStorage after login
-  const [userData, setUserData] = useState(() => {
+import bgImage from "../images/bg.jpg"; 
+
+const Store1Dashboard = () => {
+  const navigate = useNavigate();
+  const [userData] = useState(() => {
     const savedUser = localStorage.getItem('user'); 
-    return savedUser ? JSON.parse(savedUser) : { role: 'store1', name: 'Authorized User' };
+    return savedUser ? JSON.parse(savedUser) : { role: 'store1', name: 'Manager' };
   });
+  const [automationLogs, setAutomationLogs] = useState([]);
+  const [wh2Stock, setWh2Stock] = useState(0);
+  const [wh2Revenue, setWh2Revenue] = useState(0);
+  const selectedStore = 'WH-2';
+  const categories = ['Books', 'Toys', 'Electronics', 'Clothes'];
+  const generateProducts = (prefix, count) =>
+  Array.from({ length: count }, (_, i) => `${prefix}_${i + 1}`);
 
-  // Automatically map the role (store1, store2, etc.) to the Warehouse ID
-  // const roleToWH = {
-  //   'store1': 'WH-1',
-  //   'store2': 'WH-2',
-  //   'store3': 'WH-3',
-  //   'store4': 'WH-4',
-  //   'admin': 'WH-1' // Admin defaults to WH-1 or can be handled separately
-  // };
+  const productMap = {
+    Books: generateProducts("Book", 20),
+    Toys: generateProducts("Toy", 20),
+    Electronics: generateProducts("Electronic", 20),
+    Clothes: generateProducts("Cloth", 20),
+};
 
-  const selectedStore =  'WH-2';
-  
-  // 2. STATE MANAGEMENT
-  const [selectedProduct, setSelectedProduct] = useState('Book_1');
+  const COLORS = ['#4b7291', '#70d6bc', '#ffd08a', '#ff8a8a'];
+
   const [selectedCategory, setSelectedCategory] = useState('Books');
+  const [selectedProduct, setSelectedProduct] = useState('Book_1');
+  const [modalCategory, setModalCategory] = useState('Books');
   const [currentStock, setCurrentStock] = useState(50);
   const [basePrice, setBasePrice] = useState(100.00);
+  const [competitorPrice, setCompetitorPrice] = useState(105);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  
-  // API Data States
   const [inventoryLog, setInventoryLog] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
-  const [auditSummary, setAuditSummary] = useState({
-    financial_loss: 0, dead_stock: 0, market_gaps: 0, revenue_gaps: 0
-  });
+  const [auditSummary, setAuditSummary] = useState({ financial_loss: 0, dead_stock: 0, market_gaps: 0, revenue_gaps: 0 });
   const [anomalies, setAnomalies] = useState([]);
   const [forecastResult, setForecastResult] = useState(null);
-  const [auditReport, setAuditReport] = useState(null);
-
   const [isAnomalyModalOpen, setIsAnomalyModalOpen] = useState(false);
-  const categories = ['Books', 'Toys', 'Electronics', 'Clothes'];
 
-  // 3. API INTEGRATION
-  const fetchInventory = async () => {
-    try {
-      const response = await axios.get(`http://localhost:3002/StockData/inventory?store=${selectedStore}&item=${selectedProduct}`);
-      const data = response.data || [];
-      setInventoryLog(data);
-      const total = data.reduce((sum, row) => sum + (parseFloat(row.revenue) || 0), 0);
-      setTotalRevenue(total);
-    } catch (error) {
-      console.error("Inventory Fetch Error:", error);
-    }
-  };
-
-  const fetchAuditSummary = async () => {
-    try {
-      const response = await axios.get(`http://localhost:3002/api/audit-summary?warehouse=${selectedStore}&category=${selectedCategory}`);
-      setAuditSummary(response.data || { financial_loss: 0, dead_stock: 0, market_gaps: 0, revenue_gaps: 0 });
-    } catch (error) {
-      console.error("Audit Summary Error:", error);
-    }
-  };
-
-  const fetchAnomalies = async () => {
-    try {
-      const response = await axios.get(`http://localhost:3002/api/anomalies`);
-      // Filter anomalies to only show those belonging to the logged-in store
-      const filtered = (response.data || []).filter(a => a.warehouse_id === selectedStore);
-      setAnomalies(filtered);
-    } catch (error) {
-      console.error("Anomaly Fetch Error:", error);
-    }
-  };
+  const utilizationData = [
+    { subject: 'Space Used', A: 120, fullMark: 150 },
+    { subject: 'Efficiency', A: 98, fullMark: 150 },
+    { subject: 'Access Speed', A: 86, fullMark: 150 },
+    { subject: 'Safety', A: 140, fullMark: 150 },
+    { subject: 'Organization', A: 85, fullMark: 150 },
+  ];
 
   useEffect(() => {
-    fetchInventory();
-    fetchAuditSummary();
-    fetchAnomalies();
+    const fetchAutomationLogs = async () => {
+      try {
+        const res = await axios.get(`http://localhost:3002/alert/automation-logs?store=${selectedStore}`);
+        const logs = res.data?.productLogs || [];
+        const filteredLogs = logs.filter((item) => item.status.includes("UNDERSTOCK") || item.status.includes("OVERSTOCK"));
+        setAutomationLogs(filteredLogs);
+      } catch (error) { console.error("Automation Logs Error:", error); }
+    };
+    fetchAutomationLogs();
+  }, [selectedStore]);
+
+  useEffect(() => {
+    const fetchRevenue = async () => {
+      try {
+        const response = await axios.get("http://localhost:3002/revenue/warehouse/WH-2");
+        setWh2Revenue(Number(response.data?.totalRevenue || 0));
+      } catch (error) { setWh2Revenue(0); }
+    };
+    fetchRevenue();
+  }, []);
+
+  useEffect(() => {
+    const fetchStock = async () => {
+      try {
+        const response = await axios.get("http://localhost:3002/stock/total-stock");
+        const wh2 = response.data?.breakdown?.["WH-2"];
+        setWh2Stock(wh2 ? Number(wh2) : 0);
+      } catch (error) { setWh2Stock(0); }
+    };
+    fetchStock();
+  }, []);
+
+  useEffect(() => {
+    if (isAnomalyModalOpen) { fetchAuditSummary(selectedStore, modalCategory); }
+  }, [modalCategory, isAnomalyModalOpen]);
+
+  useEffect(() => { setSelectedProduct(productMap[selectedCategory][0]); }, [selectedCategory]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const invRes = await axios.get(`http://localhost:3002/StockData/inventory?store=${selectedStore}&item=${selectedProduct}`);
+        const data = invRes.data || [];
+        setInventoryLog(data);
+        setTotalRevenue(data.reduce((sum, row) => sum + (parseFloat(row.revenue) || 0), 0));
+        const anomalyRes = await axios.get(`http://localhost:3002/api/anomalies`);
+        setAnomalies((anomalyRes.data || []).filter(a => a.warehouse_id === selectedStore));
+      } catch (error) { console.error("API Error", error); }
+    };
+    fetchData();
   }, [selectedStore, selectedProduct, selectedCategory]);
 
   const runAIForecast = async () => {
     setIsSyncing(true);
     try {
       const response = await axios.post(`http://localhost:3002/api/predict`, {
-        store: selectedStore,
-        item: selectedProduct,
-        stock: currentStock,
-        price: basePrice
+        store: selectedStore, item: selectedProduct, stock: currentStock, price: basePrice
       });
       setForecastResult(response.data);
-    } catch (error) { console.error(error); }
-    finally { setIsSyncing(false); }
+      const compRes = await axios.get(`http://localhost:3002/competitor-price?store=${selectedStore}&item=${selectedProduct}&stock=${currentStock}&price=${basePrice}`);
+      setCompetitorPrice(compRes.data.competitor_price); 
+    } catch (error) { console.error(error); } finally { setIsSyncing(false); }
+  };
+
+  const fetchAuditSummary = async (store, category) => {
+    try {
+      const res = await axios.get(`http://localhost:3002/api/audit-summary?store=${store}&category=${category}`);
+      const data = res.data || {};
+      setAuditSummary({
+        financial_loss: Number(data.financial_loss || 0),
+        dead_stock: Number(data.dead_stock || 0),
+        market_gaps: Number(data.market_gaps || 0),
+        revenue_gaps: Number(data.data_gaps || 0),
+      });
+    } catch (error) { console.error("Audit API error:", error); }
+  };
+
+  const generateIntelligenceReport = async () => {
+    setIsSyncing(true);
+    try {
+      const doc = new jsPDF();
+      const timestamp = new Date().toLocaleString();
+      const [revenueRes, stockRes, logsRes] = await Promise.all([
+        axios.get(`http://localhost:3002/revenue/warehouse/${selectedStore}`),
+        axios.get(`http://localhost:3002/stock/total-stock`),
+        axios.get(`http://localhost:3002/alert/automation-logs?store=${selectedStore}`)
+      ]);
+      const revenue = Number(revenueRes.data?.totalRevenue || 0);
+      const totalStock = Number(stockRes.data?.breakdown?.[selectedStore] || 0);
+      const logs = logsRes.data?.productLogs || [];
+      const understock = logs.filter(l => l.status.includes("UNDERSTOCK"));
+      const overstock = logs.filter(l => l.status.includes("OVERSTOCK"));
+
+      doc.setFillColor(43, 58, 74); 
+      doc.rect(0, 0, 210, 45, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text("FULL INTELLIGENCE REPORT", 15, 25);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Warehouse: " + selectedStore + " | Issued: " + timestamp, 15, 35);
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("1. Business Overview", 15, 60);
+      doc.setDrawColor(209, 226, 232);
+      doc.line(15, 62, 195, 62);
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Total Revenue: $" + revenue.toLocaleString(), 20, 72);
+      doc.text("Total Stock Units: " + totalStock, 20, 80);
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("2. Inventory Health Analysis", 15, 100);
+      doc.line(15, 102, 195, 102);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Understock Products: " + understock.length, 20, 112);
+      doc.text("Overstock Products: " + overstock.length, 20, 120);
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("3. Critical Stock Alerts", 15, 140);
+      doc.line(15, 142, 195, 142);
+      let y = 152;
+      logs.slice(0, 10).forEach((item, index) => {
+        doc.setFontSize(9);
+        const logText = (index + 1) + ". " + item.product + " (" + item.category + ") ! " + item.status;
+        doc.text(logText, 20, y);
+        y += 8;
+      });
+
+      // RESTORED PERFORMANCE INSIGHTS
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("4. Performance Insights", 15, y + 10);
+      doc.line(15, y + 12, 195, y + 12);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("• Warehouse " + selectedStore + " is generating strong revenue flow.", 20, y + 22);
+      doc.text("• " + understock.length + " items require immediate restocking.", 20, y + 30);
+      doc.text("• Overstock detected in " + overstock.length + " products impacting storage.", 20, y + 38);
+
+      doc.save("Full_Intelligence_Report_" + selectedStore + ".pdf");
+    } catch (error) { console.error("Full Report Error:", error); } finally { setIsSyncing(false); }
+  };
+
+  const generateFullBIReport = async () => {
+    setIsSyncing(true);
+    try {
+      const doc = new jsPDF();
+      const timestamp = new Date().toLocaleString();
+      let auditData = {};
+      try {
+        const res = await axios.get(`http://localhost:3002/api/audit-summary?store=${selectedStore}&category=${modalCategory}`);
+        auditData = res.data || {};
+      } catch (error) { console.error("Audit fetch failed:", error); }
+
+      doc.setFillColor(43, 58, 74); 
+      doc.rect(0, 0, 210, 45, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text("ANOMALY & AUDIT REPORT", 15, 25);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Terminal ID: " + selectedStore + " | Sector: " + modalCategory.toUpperCase(), 15, 35);
+      doc.text("Generated: " + timestamp, 140, 35);
+
+      let y = 65;
+      doc.setTextColor(43, 58, 74);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("1. Strategic Audit Summary", 15, y);
+      doc.setDrawColor(209, 226, 232);
+      doc.line(15, y + 2, 195, y + 2);
+
+      const metrics = [
+        { label: "Financial Loss Exposure", value: "$" + Number(auditData.financial_loss || 0).toLocaleString() },
+        { label: "Dead Stock Volume", value: Number(auditData.dead_stock || 0).toLocaleString() + " Units" },
+        { label: "Market Gaps Identified", value: Number(auditData.market_gaps || 0).toLocaleString() },
+        { label: "Revenue Discrepancies", value: Number(auditData.data_gaps || 0).toLocaleString() }
+      ];
+
+      y += 15;
+      metrics.forEach((m) => {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, y - 6, 180, 10, 'F');
+        doc.setTextColor(100, 116, 139);
+        doc.setFontSize(10);
+        doc.text(m.label.toUpperCase(), 20, y);
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(11);
+        doc.text(m.value, 110, y);
+        y += 12;
+      });
+
+      doc.save("Audit_Anomaly_Report_" + selectedStore + "_" + modalCategory + ".pdf");
+    } catch (error) { console.error("PDF Generation Failed:", error); } finally { setIsSyncing(false); }
   };
 
   return (
-    <div className="flex min-h-screen bg-[#060608] text-slate-200">
-      
-      {/* SIDEBAR */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0a0c] border-r border-white/5 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0`}>
-        <div className="p-6 flex items-center gap-3 border-b border-white/5">
-          <div className="p-2 bg-blue-600 rounded-lg"><Database size={20} className="text-white" /></div>
-          <h1 className="text-xl font-black tracking-tighter italic uppercase underline decoration-blue-500">Smart<span className="text-blue-500">Stock</span></h1>
+    <div 
+      className="flex min-h-screen font-sans relative overflow-hidden"
+      style={{ 
+        backgroundImage: `url(${bgImage})`, 
+        backgroundSize: 'cover', 
+        backgroundPosition: 'center', 
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        width: '100vw',
+        height: '100vh'
+      }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-[#e2eff5]/30 to-amber-50/20 backdrop-blur-[4px] z-0"></div>
+
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#2b3a4a]/90 backdrop-blur-xl transition-all border-r border-white/10 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0`}>
+        <div className="p-8 h-full flex flex-col">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="p-2.5 bg-[#4b7291] rounded-xl shadow-lg shadow-blue-900/20">
+              <Database size={22} className="text-white" />
+            </div>
+            <h1 className="text-xl font-black tracking-tight text-white uppercase italic">SmartStock</h1>
+          </div>
+          <nav className="space-y-2 flex-1">
+            <NavItem icon={<LayoutDashboard size={20}/>} label="Overview" active onClick={() => setSidebarOpen(false)} />
+            <NavItem icon={<ShieldCheck size={20}/>} label="Anomaly Detection Report" onClick={() => setIsAnomalyModalOpen(true)} />
+            <NavItem icon={<FileText size={20}/>} label="Reports" onClick={generateIntelligenceReport} />
+            <NavItem icon={<MessageSquare size={20}/>} label="System Chat" onClick={() => navigate('/user-chat')} />
+          </nav>
+          <div className="mt-auto p-5 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-md">
+             <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#4b7291] flex items-center justify-center text-white font-bold shadow-inner">OP</div>
+                <div>
+                   <p className="text-xs font-black text-white">{userData.name}</p>
+                   <p className="text-[10px] text-slate-400 uppercase font-black tracking-tighter">Auth Store 2</p>
+                </div>
+             </div>
+          </div>
         </div>
-        <nav className="p-4 space-y-2">
-          <NavItem icon={<LayoutDashboard size={18}/>} label="My Warehouse" active />
-          <NavItem icon={<BarChart3 size={18}/>} label="Sales Data" />
-          <NavItem icon={<ShieldCheck size={18}/>} label="Forensic Audit" />
-        </nav>
       </aside>
 
-      <div className="flex-1 flex flex-col">
-        {/* NAVBAR - Switching options removed as requested */}
-        <nav className="h-16 bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 sticky top-0 z-40">
+      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+        <nav className="h-20 bg-white/40 backdrop-blur-md border-b border-[#d1e2e8]/50 flex items-center justify-between px-10 sticky top-0 z-40">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="lg:hidden text-slate-400"><Menu /></button>
-            <div className="flex items-center gap-2 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span className="text-[10px] font-black text-green-400 uppercase tracking-widest">Authenticated: {userData.role}</span>
-            </div>
+            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="lg:hidden p-2 hover:bg-white/50 rounded-lg transition-colors"><Menu size={20}/></button>
+            <h2 className="text-xl font-black italic text-[#4b7291] tracking-tight">Welcome Manager !</h2>
           </div>
-          <div className="flex items-center gap-3 border-l border-white/10 pl-6">
-              <div className="text-right">
-                <p className="text-xs font-black uppercase tracking-tighter">{userData.name}</p>
-                <p className="text-[9px] text-slate-500 font-bold uppercase">{selectedStore} Operator</p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-black text-xs text-white uppercase">{userData.role.substring(0,2)}</div>
+          <div className="flex items-center gap-4">
+             <button onClick={generateIntelligenceReport} className="flex items-center gap-2 px-6 py-2.5 bg-[#4b7291] text-white rounded-xl font-black text-[11px] uppercase shadow-[0_5px_15px_rgba(75,114,145,0.3)] hover:scale-105 active:scale-95 transition-all">
+                <Download size={14}/> Full Intelligence Report
+             </button>
           </div>
         </nav>
 
-        <main className="p-4 md:p-8 space-y-8 max-w-[1600px] mx-auto w-full">
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <h2 className="text-3xl font-black italic uppercase tracking-tighter flex items-center gap-3">
-              <Gauge className="text-blue-500" /> {selectedStore} Terminal Console
+        <main className="p-8 lg:p-12 space-y-10 overflow-y-auto">
+          <div className="mb-6 animate-in slide-in-from-left duration-700">
+            <h2 className="text-2xl font-black uppercase italic text-slate-800 tracking-tighter flex items-center gap-3">
+              <div className="w-2 h-8 bg-[#4b7291] rounded-full"></div>
+               Warehouse 02
             </h2>
-          </header>
+          </div>
 
-          {/* STATS ROW */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Warehouse Revenue" value={`$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2})}`} trend="Live Sync" icon={<DollarSign className="text-green-500"/>} />
-            <StatCard label="Inventory Rows" value={inventoryLog.length} trend="Validated" icon={<Package className="text-blue-500"/>} />
-            <StatCard label="Store Anomalies" value={anomalies.length} trend="Alert" icon={<AlertTriangle className="text-red-500"/>} onClick={() => setIsAnomalyModalOpen(true)} clickable />
-            <div className="bg-white/5 border border-white/10 p-5 rounded-2xl flex flex-col justify-between">
-                <div className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Role Access</div>
-                <p className="text-xl font-black text-blue-400 mt-2 italic uppercase">WH-2</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <StatCard label="Total Revenue" value={"$" + wh2Revenue.toLocaleString()} icon={<DollarSign/>} color="blue" />
+            <StatCard label="Total Stocks" value={wh2Stock} icon={<Package/>} color="teal" />
+            <StatCard
+              label="Anomaly Count"
+              value="Click To See Anomalies"
+              icon={<AlertTriangle/>}
+              color="rose"
+              clickable
+              onClick={async () => {
+                await fetchAuditSummary(selectedStore, modalCategory);
+                setIsAnomalyModalOpen(true);
+              }}
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-4 space-y-6">
-                <section className="bg-white/5 border border-white/10 p-6 rounded-3xl">
-                    <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2 text-blue-500"><BrainCircuit size={16} /> Forecast Engine</h3>
-                    <div className="space-y-4">
-                        <Dropdown label="Category" value={selectedCategory} onChange={setSelectedCategory} options={categories} />
-                        <Dropdown label="Product SKU" value={selectedProduct} onChange={setSelectedProduct} options={['Book_1', 'Toy_1', 'Electronic_1', 'Cloth_1']} />
-                        <Input label="Current Stock" value={currentStock} onChange={setCurrentStock} type="number" />
-                        <Input label="Base Price" value={basePrice} onChange={setBasePrice} type="number" />
-                        <button onClick={runAIForecast} className="w-full py-4 bg-blue-600 rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-lg shadow-blue-500/20">
-                            {isSyncing ? "Syncing API..." : "Calculate AI Prediction"}
-                        </button>
-                    </div>
-                </section>
-                {forecastResult && (
-                  <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-3xl animate-in slide-in-from-top">
-                    <p className="text-2xl font-black text-white">${forecastResult?.price || '0.00'}</p>
-                    <p className="text-[10px] font-black uppercase text-blue-400 mt-1">Suggested Price</p>
-                  </div>
-                )}
+            <div className="lg:col-span-5 bg-white/70 backdrop-blur-lg border border-white/50 p-8 rounded-[2.5rem] shadow-xl">
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-2">
+                <Activity size={16} className="text-[#4b7291]" /> Operational Efficiency
+              </h3>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={utilizationData}>
+                    <PolarGrid stroke="#cbd5e1" />
+                    <PolarAngleAxis dataKey="subject" fontSize={11} fontWeight="bold" stroke="#475569" />
+                    <PolarRadiusAxis angle={30} domain={[0, 150]} fontSize={9} stroke="#94A3B8" /> 
+                    <Radar name="Usage" dataKey="A" stroke="#4b7291" fill="#4b7291" fillOpacity={0.6} dot={{ r: 4, fill: "#fff", stroke: "#4b7291", strokeWidth: 2 }} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
 
-            <div className="lg:col-span-8 space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <MiniKpi label="Financial Risk" value={auditSummary?.financial_loss || 0} color="text-red-500" />
-                    <MiniKpi label="Dead Stock" value={auditSummary?.dead_stock || 0} color="text-purple-500" />
-                    <MiniKpi label="Market Gap" value={auditSummary?.market_gaps || 0} color="text-blue-500" />
-                    <MiniKpi label="Revenue Gap" value={auditSummary?.revenue_gaps || 0} color="text-orange-500" />
+            <div className="lg:col-span-7 bg-white/70 backdrop-blur-lg border border-white/50 p-8 rounded-[2.5rem] shadow-xl">
+              <h3 className="text-xs font-black uppercase tracking-widest text-[#4b7291] mb-8 flex items-center gap-2"><BrainCircuit size={16} /> AI Forecast Engine</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-5">
+                  <Dropdown label="Sector" value={selectedCategory} onChange={setSelectedCategory} options={categories} />
+                  <Dropdown label="Asset" value={selectedProduct} onChange={setSelectedProduct} options={productMap[selectedCategory]} />
+                  <div className="flex gap-4">
+                    <Input label="Stock" value={currentStock} onChange={setCurrentStock} type="number" />
+                    <Input label="Price" value={basePrice} onChange={setBasePrice} type="number" />
+                  </div>
+                  <button onClick={runAIForecast} className="w-full py-4 bg-[#4b7291] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg active:scale-95">
+                    {isSyncing ? "Syncing Logic..." : "Run AI Forcast"}
+                  </button>
                 </div>
-                <section className="bg-white/5 border border-white/10 p-8 rounded-3xl min-h-[300px]">
-                    <h3 className="text-lg font-black uppercase tracking-tighter mb-6 flex items-center gap-2 underline decoration-blue-500 underline-offset-8">Intelligence Analysis</h3>
-                    {auditReport ? <div className="text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed">{auditReport}</div> : <p className="text-slate-600 text-xs italic">Awaiting AI generation for {selectedStore}...</p>}
-                </section>
+                <div>
+                  {forecastResult ? (
+                    <div className="bg-gradient-to-b from-[#f8fafc]/90 to-white/90 border border-[#d1e2e8] p-6 rounded-[2.5rem] flex flex-col justify-between h-full shadow-inner">
+                       <div className="space-y-4">
+                          <div className="flex justify-between items-center px-2">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prediction Confidence</p>
+                            <p className="text-sm font-black text-[#70d6bc]">{forecastResult.confidence}%</p>
+                          </div>
+                          
+                          <div className="h-[180px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={[
+                                { name: 'Target', value: forecastResult.predicted_upper || forecastResult.price, fill: '#4b7291' },
+                                { name: 'Comp.', value: competitorPrice, fill: '#f59e0b' },
+                                { name: 'Demand', value: forecastResult.demand, fill: '#70d6bc' }
+                              ]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 'bold', fill: '#64748b'}} />
+                                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
+                                <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={30} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                       </div>
+                       <div className="border-t border-slate-100 pt-4 mt-2 space-y-3">
+                          <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 px-2">
+                             <span>Target: ${forecastResult.price}</span>
+                             <span>Market: ${competitorPrice}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className={`text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-tighter ${forecastResult.price <= competitorPrice ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                               {forecastResult.price <= competitorPrice ? 'Competitive Advantage' : 'Price Overflow'}
+                            </span>
+                            <p className="text-[10px] font-black italic text-slate-400">Demand: {forecastResult.demand}u</p>
+                          </div>
+                       </div>
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center bg-slate-50/30 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-8 text-center text-slate-400">
+                       <Activity size={32} className="mb-2 opacity-30 animate-pulse" />
+                       <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Command</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-xl border border-white/50 p-8 rounded-[2.5rem] shadow-xl">
+             <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-2"><Zap size={16} className="text-amber-400"/> Automation Logs</h3>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {automationLogs.length > 0 ? (
+                automationLogs.map((log, index) => (
+                  <AutomationRow
+                    key={index}
+                    label={log.product + " → " + log.status}
+                    context={log.category}
+                  />
+                ))
+              ) : (
+                <AutomationRow
+                  label="All products are in NORMAL STOCK"
+                  context="System Stable"
+                />
+              )}
             </div>
           </div>
         </main>
       </div>
 
-      {/* ANOMALY MODAL (Filtered to specific store) */}
       {isAnomalyModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setIsAnomalyModalOpen(false)}></div>
-          <div className="relative bg-[#0a0a0c] border border-white/10 w-full max-w-[95%] h-full max-h-[90vh] rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl">
-            <div className="p-8 border-b border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-4 text-red-500"><ShieldAlert size={32} /><h3 className="text-3xl font-black uppercase tracking-tighter italic">{selectedStore} Anomalies</h3></div>
-              <button onClick={() => setIsAnomalyModalOpen(false)} className="p-4 bg-white/5 hover:bg-red-500 rounded-2xl transition-all"><X size={24} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-slate-900/40">
+          <div className="relative bg-white/95 border border-white w-full max-w-[1000px] h-full max-h-[85vh] rounded-[3rem] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-10 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-5 text-rose-500">
+                <ShieldAlert size={36} /><h3 className="text-3xl font-black uppercase tracking-tighter italic text-slate-800">Anomaly Center</h3>
+              </div>
+              <div className="flex items-center gap-4">
+                  <select value={modalCategory} onChange={(e) => setModalCategory(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 focus:outline-none cursor-pointer hover:bg-white transition-all">
+                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                <button onClick={() => setIsAnomalyModalOpen(false)} className="p-4 bg-slate-50 text-slate-400 hover:text-rose-500 rounded-2xl transition-all"><X size={24} /></button>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                {anomalies.map((anomaly, i) => (
-                    <div key={i} className="group bg-white/[0.02] border border-white/5 p-6 rounded-[1.5rem] flex items-center justify-between hover:bg-white/[0.04]">
-                        <div className="flex items-center gap-5">
-                            <div className="w-16 h-16 bg-black rounded-xl border border-white/10 flex items-center justify-center text-red-500 font-black italic text-xs uppercase">FAULT</div>
-                            <div>
-                                <p className="text-sm font-black uppercase text-white tracking-tight">{anomaly?.product_name || 'N/A'}</p>
-                                <div className="flex gap-2 mt-1">
-                                    {anomaly?.fault_loss_sale === 1 && <span className="text-[8px] font-black px-2 py-0.5 bg-red-500/10 text-red-500 rounded uppercase">Negative Margin</span>}
-                                    {anomaly?.fault_dead_stock === 1 && <span className="text-[8px] font-black px-2 py-0.5 bg-purple-500/10 text-purple-500 rounded uppercase">Dead Stock</span>}
-                                </div>
-                            </div>
-                        </div>
-                        <p className="text-lg font-black text-red-500 italic uppercase italic">CRITICAL</p>
-                    </div>
-                ))}
+            
+            <div className="flex-1 overflow-y-auto p-10 space-y-12">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                 <ModalStat label="Financial Loss" value={auditSummary?.financial_loss || 0} color="rose" />
+                 <ModalStat label="Dead Stock" value={auditSummary?.dead_stock || 0} color="blue" />
+                 <ModalStat label="Market Gap" value={auditSummary?.market_gaps || 0} color="teal" />
+                 <ModalStat label="Revenue Gap" value={auditSummary?.revenue_gaps || 0} color="orange" />
+              </div>
+              <div className="bg-[#2b3a4a] rounded-[2.5rem] p-10 flex flex-col md:flex-row justify-between items-center text-white gap-8 shadow-2xl">
+                <div>
+                    <h4 className="text-2xl font-black uppercase italic text-[#70d6bc] tracking-tighter">Export Anomaly Document</h4>
+                    <p className="text-sm text-slate-400 mt-2 uppercase tracking-widest font-semibold">Comprehensive Stock & AI Forecast Analysis</p>
+                </div>
+                <button onClick={generateFullBIReport} className="flex items-center gap-4 bg-[#4b7291] hover:bg-[#5a86a9] px-10 py-5 rounded-2xl font-black uppercase text-xs shadow-xl transition-all active:scale-95">
+                    <Download size={22}/> Export PDF Report
+                </button>
               </div>
             </div>
           </div>
@@ -227,30 +483,51 @@ const Store2Dashboard = () => {
   );
 };
 
-// HELPER COMPONENTS
-const NavItem = ({ icon, label, active }) => (
-  <div className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-500 hover:text-white'}`}>
-    {icon} <span className="text-xs font-black uppercase tracking-widest">{label}</span>
+const StatCard = ({ label, value, icon, color, onClick, clickable }) => {
+  const colorMap = { blue: 'bg-blue-50 text-[#4b7291]', teal: 'bg-teal-50 text-[#70d6bc]', rose: 'bg-rose-50 text-rose-500' };
+  return (
+    <div onClick={onClick} className={`bg-white/80 backdrop-blur-lg border border-white/60 p-8 rounded-[2.5rem] flex items-center gap-6 transition-all shadow-lg hover:shadow-slate-200/60 ${clickable ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : ''}`}>
+       <div className={`p-4 rounded-2xl shrink-0 shadow-inner ${colorMap[color] || 'bg-slate-50'}`}>{icon}</div>
+       <div className="min-w-0 flex-1">
+         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">{label}</p>
+         <p className="text-2xl font-black text-[#2b3a4a] italic leading-tight tracking-tighter">{value}</p>
+       </div>
+    </div>
+  );
+};
+
+const AutomationRow = ({ label, context }) => (
+  <div className="p-5 bg-white/40 border border-white/60 rounded-3xl flex justify-between items-center group hover:bg-white/80 transition-all shadow-sm">
+     <div className="flex items-center gap-4">
+        <div className="w-1.5 h-1.5 bg-[#4b7291] rounded-full shadow-[0_0_8px_#4b7291]"></div>
+        <p className="text-xs font-black text-slate-700 italic tracking-tight">{label}</p>
+     </div>
+     <span className="text-[9px] font-black uppercase text-[#4b7291] px-3 py-1 bg-white/80 rounded-full border border-slate-100 shadow-sm">{context}</span>
   </div>
 );
 
-const StatCard = ({ label, value, trend, icon, onClick, clickable }) => (
-  <div onClick={onClick} className={`bg-white/5 border border-white/10 p-5 rounded-2xl flex justify-between items-start transition-all ${clickable ? 'cursor-pointer hover:bg-white/10' : ''}`}>
-    <div><p className="text-[10px] font-black uppercase text-slate-500">{label}</p><p className="text-2xl font-black mt-2 italic">{value}</p><span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">{trend}</span></div>
-    <div className="p-2 bg-white/5 rounded-lg">{icon}</div>
-  </div>
-);
+const ModalStat = ({ label, value, color }) => {
+  const colorMap = { rose: 'bg-rose-50/50 border-rose-100 text-rose-600', blue: 'bg-blue-50/50 border-blue-100 text-[#4b7291]', teal: 'bg-teal-50/50 border-teal-100 text-[#70d6bc]', orange: 'bg-amber-50/50 border-amber-100 text-amber-600' };
+  return (
+    <div className={`${colorMap[color]} border-2 p-8 rounded-[2.5rem] flex flex-col items-center text-center shadow-sm backdrop-blur-sm`}>
+        <p className="text-3xl font-black italic mb-1 tracking-tighter">{value}</p>
+        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{label}</p>
+    </div>
+  );
+};
 
-const MiniKpi = ({ label, value, color }) => (
-    <div className="bg-white/5 border border-white/10 p-4 rounded-xl"><p className="text-[8px] font-black uppercase text-slate-500 mb-1">{label}</p><p className={`text-xl font-black ${color} italic`}>{value}</p></div>
+const NavItem = ({ icon, label, active, onClick }) => (
+  <div onClick={onClick} className={`flex items-center gap-4 px-6 py-4 rounded-2xl cursor-pointer transition-all duration-300 ${active ? 'bg-[#4b7291] text-white shadow-2xl scale-105' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
+    {icon} <span className="text-[12px] font-black uppercase tracking-[0.2em]">{label}</span>
+  </div>
 );
 
 const Input = ({ label, value, onChange, type }) => (
-  <div><label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">{label}</label><input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs mt-1 text-white focus:outline-none focus:border-blue-500" /></div>
+  <div className="flex-1"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2 block ml-1">{label}</label><input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-white/60 border border-white/80 backdrop-blur-sm rounded-2xl p-4 text-xs font-black text-[#2b3a4a] focus:outline-none focus:border-[#4b7291] focus:bg-white transition-all shadow-inner" /></div>
 );
 
 const Dropdown = ({ label, value, onChange, options }) => (
-  <div><label className="text-[9px] font-black uppercase text-slate-500 tracking-widest">{label}</label><select value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs mt-1 text-white focus:outline-none focus:border-blue-500">{options.map(opt => <option key={opt} value={opt} className="bg-[#0a0a0c]">{opt}</option>)}</select></div>
+  <div className="w-full"><label className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2 block ml-1">{label}</label><select value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-white/60 border border-white/80 backdrop-blur-sm rounded-2xl p-4 text-xs font-black text-[#2b3a4a] focus:outline-none focus:border-[#4b7291] focus:bg-white appearance-none cursor-pointer transition-all shadow-inner">{options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
 );
 
-export default Store2Dashboard;
+export default Store1Dashboard;
