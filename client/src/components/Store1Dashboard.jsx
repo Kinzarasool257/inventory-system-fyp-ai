@@ -10,6 +10,9 @@ import {
   Menu, X, Download, ShieldAlert, Layers, ShoppingCart, 
   ArrowDownCircle, ArrowUpCircle, Scale, Zap, Boxes, MessageSquare, LineChart
 } from 'lucide-react';
+import ManagerNotificationBell from './ManagerNotificationBell';
+// 🔔 NEW: import the notification context to push real alerts
+import { useNotifications, NOTIF_TYPES, SEVERITY } from '../context/NotificationContext';
 
 import bgImage from "../images/bg.jpg"; 
 
@@ -51,6 +54,12 @@ const Store1Dashboard = () => {
   const [forecastResult, setForecastResult] = useState(null);
   const [isAnomalyModalOpen, setIsAnomalyModalOpen] = useState(false);
 
+  // 🔔 Get the notification trigger from context
+  const { addNotification } = useNotifications();
+
+  // 🔔 Track which alerts we've already pushed (so they don't re-fire on every poll)
+  const [pushedAlertIds, setPushedAlertIds] = useState(new Set());
+
   const utilizationData = [
     { subject: 'Space Used', A: 120, fullMark: 150 },
     { subject: 'Efficiency', A: 98, fullMark: 150 },
@@ -66,6 +75,27 @@ const Store1Dashboard = () => {
         const logs = res.data?.productLogs || [];
         const filteredLogs = logs.filter((item) => item.status.includes("UNDERSTOCK") || item.status.includes("OVERSTOCK"));
         setAutomationLogs(filteredLogs);
+
+        // 🔔 AUTO-PUSH stock alerts to the notification bell
+        filteredLogs.forEach((log) => {
+          const alertId = `${selectedStore}-${log.product}-${log.status}`;
+          if (pushedAlertIds.has(alertId)) return; // already notified
+
+          const isUnderstock = log.status.includes("UNDERSTOCK");
+          addNotification({
+            id: alertId,
+            type: NOTIF_TYPES.LOW_STOCK,
+            severity: isUnderstock ? SEVERITY.WARNING : SEVERITY.INFO,
+            title: isUnderstock 
+              ? `Low stock: ${log.product}` 
+              : `Overstock: ${log.product}`,
+            message: isUnderstock
+              ? `${log.product} (${log.category}) is running low. Reorder recommended for Warehouse 1.`
+              : `${log.product} (${log.category}) is overstocked. Review purchasing strategy.`,
+            warehouse: "Warehouse 1",
+          });
+          setPushedAlertIds(prev => new Set(prev).add(alertId));
+        });
       } catch (error) { console.error("Automation Logs Error:", error); }
     };
     fetchAutomationLogs();
@@ -106,7 +136,24 @@ const Store1Dashboard = () => {
         setInventoryLog(data);
         setTotalRevenue(data.reduce((sum, row) => sum + (parseFloat(row.revenue) || 0), 0));
         const anomalyRes = await axios.get(`http://localhost:3002/api/anomalies`);
-        setAnomalies((anomalyRes.data || []).filter(a => a.warehouse_id === selectedStore));
+        const warehouseAnomalies = (anomalyRes.data || []).filter(a => a.warehouse_id === selectedStore);
+        setAnomalies(warehouseAnomalies);
+
+        // 🔔 AUTO-PUSH anomalies as CRITICAL alerts
+        warehouseAnomalies.forEach((anomaly) => {
+          const alertId = `anomaly-${selectedStore}-${anomaly.id || anomaly.product_id || JSON.stringify(anomaly).slice(0, 20)}`;
+          if (pushedAlertIds.has(alertId)) return;
+
+          addNotification({
+            id: alertId,
+            type: NOTIF_TYPES.ANOMALY,
+            severity: SEVERITY.CRITICAL,
+            title: `Anomaly detected`,
+            message: anomaly.message || `Suspicious activity detected for product ${anomaly.product_id || 'unknown'} in Warehouse 1.`,
+            warehouse: "Warehouse 1",
+          });
+          setPushedAlertIds(prev => new Set(prev).add(alertId));
+        });
       } catch (error) { console.error("API Error", error); }
     };
     fetchData();
@@ -120,7 +167,27 @@ const Store1Dashboard = () => {
       });
       setForecastResult(response.data);
       const compRes = await axios.get(`http://localhost:3002/competitor-price?store=${selectedStore}&item=${selectedProduct}&stock=${currentStock}&price=${basePrice}`);
-      setCompetitorPrice(compRes.data.competitor_price); 
+      setCompetitorPrice(compRes.data.competitor_price);
+
+      // 🔔 Push forecast result as INFO notification
+      addNotification({
+        type: NOTIF_TYPES.DEMAND_FORECAST,
+        severity: SEVERITY.INFO,
+        title: `Forecast ready for ${selectedProduct}`,
+        message: `Predicted demand: ${response.data.demand} units. Confidence: ${response.data.confidence}%. Target price: $${response.data.predicted_upper}.`,
+        warehouse: "Warehouse 1",
+      });
+
+      // 🔔 If competitor price is higher, flag as pricing opportunity
+      if (response.data.predicted_upper <= compRes.data.competitor_price) {
+        addNotification({
+          type: NOTIF_TYPES.DYNAMIC_PRICING,
+          severity: SEVERITY.INFO,
+          title: `Competitive advantage detected`,
+          message: `${selectedProduct} priced below competitor ($${compRes.data.competitor_price}). Pricing strategy optimal.`,
+          warehouse: "Warehouse 1",
+        });
+      }
     } catch (error) { console.error(error); } finally { setIsSyncing(false); }
   };
 
@@ -134,6 +201,23 @@ const Store1Dashboard = () => {
         market_gaps: Number(data.market_gaps || 0),
         revenue_gaps: Number(data.data_gaps || 0),
       });
+
+      // 🔔 If financial loss is significant, push a critical alert
+      const loss = Number(data.financial_loss || 0);
+      if (loss > 10000) {
+        const alertId = `audit-loss-${store}-${category}-${loss}`;
+        if (!pushedAlertIds.has(alertId)) {
+          addNotification({
+            id: alertId,
+            type: NOTIF_TYPES.FRAUD,
+            severity: SEVERITY.CRITICAL,
+            title: `High financial loss in ${category}`,
+            message: `Financial loss exposure of $${loss.toLocaleString()} detected in ${category} sector. Immediate review needed.`,
+            warehouse: "Warehouse 1",
+          });
+          setPushedAlertIds(prev => new Set(prev).add(alertId));
+        }
+      }
     } catch (error) { console.error("Audit API error:", error); }
   };
 
@@ -207,6 +291,15 @@ const Store1Dashboard = () => {
       doc.text("• Overstock detected in " + overstock.length + " products impacting storage.", 20, y + 38);
 
       doc.save("Full_Intelligence_Report_" + selectedStore + ".pdf");
+
+      // 🔔 Confirm report generation
+      addNotification({
+        type: NOTIF_TYPES.SYSTEM,
+        severity: SEVERITY.INFO,
+        title: `Intelligence report generated`,
+        message: `Full intelligence report for Warehouse 1 has been exported successfully.`,
+        warehouse: "Warehouse 1",
+      });
     } catch (error) { console.error("Full Report Error:", error); } finally { setIsSyncing(false); }
   };
 
@@ -311,6 +404,8 @@ const Store1Dashboard = () => {
             <h2 className="text-xl font-black italic text-[#4b7291] tracking-tight">Welcome Manager !</h2>
           </div>
           <div className="flex items-center gap-4">
+             {/* 🔔 NOTIFICATION BELL — placed next to the report button */}
+             <ManagerNotificationBell />
              <button onClick={generateIntelligenceReport} className="flex items-center gap-2 px-6 py-2.5 bg-[#4b7291] text-white rounded-xl font-black text-[11px] uppercase shadow-[0_5px_15px_rgba(75,114,145,0.3)] hover:scale-105 active:scale-95 transition-all">
                 <Download size={14}/> Full Intelligence Report
              </button>
@@ -384,7 +479,6 @@ const Store1Dashboard = () => {
                           <div className="h-[180px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                               <BarChart data={[
-                                // Fix: Represent the real data in the chart
                                 { name: 'Target', value: forecastResult.predicted_upper, fill: '#4b7291' },
                                 { name: 'Comp.', value: competitorPrice, fill: '#f59e0b' },
                                 { name: 'Demand', value: forecastResult.demand, fill: '#70d6bc' }

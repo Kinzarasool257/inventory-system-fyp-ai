@@ -12,6 +12,11 @@ import AdminChat from "./pages/AdminChat";
 import UserChat from "./pages/UserChat";
 import StockDashboard from "./StockDashboard";
 
+// 🔔 NEW IMPORTS for notification system
+import { NotificationProvider } from "./context/NotificationContext";
+import NotificationToast from "./components/NotificationToast";
+import NotificationsPage from "./pages/NotificationsPage";
+
 /* ================= DASHBOARD LAYOUT ================= */
 function DashboardLayout() {
   return (
@@ -47,32 +52,43 @@ function DashboardLayout() {
 
 /* ================= APP ROUTES ================= */
 function App() {
+  // 🔔 Get user info from localStorage (set during login)
+  // role = "admin" or "manager"; warehouseId = "Warehouse 1" etc. (null for admin)
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const role = user.role || "admin";
+  const warehouseId = user.warehouseId || null;
+
   return (
-    <Router>
-      <Routes>
-       
-        <Route path="/" element={<Navigate to="/login" replace />} />
+    <NotificationProvider role={role} warehouseId={warehouseId}>
+      <Router>
+        <Routes>
+         
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Auth pages */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+          {/* Auth pages */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
-        {/* Dashboard */}
-        {/* <Route path="/dashboard" element={<DashboardLayout />} /> */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        {/* Other pages */}
-        <Route path="/FileUpload" element={<FileUpload />} />
-        <Route path="/admin-chat" element={<AdminChat />} />
-        <Route path="/user-chat" element={<UserChat />} />
-        <Route path="stock" element={<StockDashboard />} />
-        <Route path="/view" element={<StoreAdminView />} />
-        
+          {/* Dashboard */}
+          {/* <Route path="/dashboard" element={<DashboardLayout />} /> */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          {/* Other pages */}
+          <Route path="/FileUpload" element={<FileUpload />} />
+          <Route path="/admin-chat" element={<AdminChat />} />
+          <Route path="/user-chat" element={<UserChat />} />
+          <Route path="stock" element={<StockDashboard />} />
+          <Route path="/view" element={<StoreAdminView />} />
 
+          {/* 🔔 NEW notifications page route */}
+          <Route path="/notifications" element={<NotificationsPage />} />
+          
+        </Routes>
 
-      </Routes>
-    </Router>
+        {/* 🔔 Toast popups render globally — visible on every page */}
+        <NotificationToast />
+      </Router>
+    </NotificationProvider>
   );
 }
 
 export default App;
-
