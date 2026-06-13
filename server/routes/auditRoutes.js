@@ -5,6 +5,6 @@ const router = express.Router();
 
 router.get("/audit-summary", audit.getAuditSummary);
 router.get("/anomalies", audit.getAnomalies);
-router.post("/audit-report", audit.generateAuditReport);
+router.get("/audit-report", audit.generateAuditReport);
 
 module.exports = router;

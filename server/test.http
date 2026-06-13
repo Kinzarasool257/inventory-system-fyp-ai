@@ -72,7 +72,7 @@ GET http://localhost:3002/api/audit-summary?store=WH-4&category=Books
 GET http://localhost:3002/api/anomalies
 
 ####audit report
-POST http://localhost:3002/api/audit-report
+GET http://localhost:3002/api/audit-report?warehouse_id=WH-4
 
 
 ### Signup admin
