@@ -11,6 +11,8 @@ const path = require('path');
 const utilizationRoutes = require("./routes/utilizationRoutes");
 const inventoryRoutes = require('./routes/inventoryRoutes');
 require('dotenv').config();
+const chatRoute = require("./routes/chatbot");
+
 const { verifyToken, authorizeRoles } = require('./middleware/authMiddleware');
 require('./backupScheduler');
 const auditRoutes = require("./routes/auditRoutes");
@@ -54,7 +56,7 @@ if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir);
 }
 
-
+app.use("/chatbot", chatRoute);
 
 // ✅ Manual Backup Route
 app.get('/backup', (req, res) => {

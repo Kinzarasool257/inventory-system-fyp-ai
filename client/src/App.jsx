@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-
+import Chatbot from "./Chatbot";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Sidebar from "./components/sidebar";
@@ -78,6 +78,7 @@ function App() {
           <Route path="/user-chat" element={<UserChat />} />
           <Route path="stock" element={<StockDashboard />} />
           <Route path="/view" element={<StoreAdminView />} />
+          <Route path="/chatbot" element={<Chatbot />} />
 
           {/* 🔔 NEW notifications page route */}
           <Route path="/notifications" element={<NotificationsPage />} />
