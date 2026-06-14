@@ -13,6 +13,9 @@ export default function AdminChat() {
 
   const messagesEndRef = useRef(null);
 
+  // 🌐 Global dynamic base path environment configuration string
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+
   // Auto scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,11 +45,12 @@ export default function AdminChat() {
   useEffect(() => {
     if (!admin) return;
 
+    // 🛠️ Changed endpoint to pull dynamically from your environment string
     axios
-      .get("http://localhost:3002/chat/users")
+      .get(`${baseUrl}/chat/users`)
       .then((res) => setUsers(res.data))
       .catch((err) => console.error("Error loading users:", err));
-  }, [admin]);
+  }, [admin, baseUrl]);
 
   // Select user
   const selectUser = async (user) => {
@@ -54,8 +58,9 @@ export default function AdminChat() {
     setMessages([]);
 
     try {
+      // 🛠️ Changed endpoint to pull dynamically from your environment string
       const res = await axios.get(
-        `http://localhost:3002/chat/messages/${user.id}`
+        `${baseUrl}/chat/messages/${user.id}`
       );
       setMessages(res.data);
     } catch (err) {

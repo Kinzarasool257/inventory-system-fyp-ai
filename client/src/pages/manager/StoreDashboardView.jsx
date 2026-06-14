@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { jsPDF } from 'jspdf';
+import { useNavigate } from 'react-router-dom';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, RadarChart, PolarGrid, PolarAngleAxis, Radar, PolarRadiusAxis, CartesianGrid } from 'recharts';
 import { 
   TrendingUp, BarChart3, ShieldCheck, BrainCircuit, Activity,
   Truck, AlertCircle, Eye, Gauge, ArrowRight, Search, 
@@ -8,21 +11,21 @@ import {
   Layers, ShoppingCart
 } from 'lucide-react';
 
+import bgImage from "../../images/bg.jpg"; 
+
 const StoreAdminView = () => {
   // 1. DYNAMIC AUTH & ROLE MANAGEMENT
-  // Retrieve user data from your AuthContext or LocalStorage after login
-  const [userData, setUserData] = useState(() => {
+  const [userData] = useState(() => {
     const savedUser = localStorage.getItem('user'); 
     return savedUser ? JSON.parse(savedUser) : { role: 'store1', name: 'Authorized User' };
   });
 
-  // Automatically map the role (store1, store2, etc.) to the Warehouse ID
   const roleToWH = {
     'store1': 'WH-1',
     'store2': 'WH-2',
     'store3': 'WH-3',
     'store4': 'WH-4',
-    'admin': 'WH-1' // Admin defaults to WH-1 or can be handled separately
+    'admin': 'WH-1'
   };
 
   const selectedStore = roleToWH[userData.role] || 'WH-1';
@@ -43,15 +46,19 @@ const StoreAdminView = () => {
   });
   const [anomalies, setAnomalies] = useState([]);
   const [forecastResult, setForecastResult] = useState(null);
-  const [auditReport, setAuditReport] = useState(null);
+  const [auditReport] = useState(null);
 
   const [isAnomalyModalOpen, setIsAnomalyModalOpen] = useState(false);
   const categories = ['Books', 'Toys', 'Electronics', 'Clothes'];
 
+  // 🌐 Global dynamic base path environment configuration string
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+
   // 3. API INTEGRATION
   const fetchInventory = async () => {
     try {
-      const response = await axios.get(`http://localhost:3002/StockData/inventory?store=${selectedStore}&item=${selectedProduct}`);
+      // 🛠️ Updated path to string template environment literal
+      const response = await axios.get(`${baseUrl}/StockData/inventory?store=${selectedStore}&item=${selectedProduct}`);
       const data = response.data || [];
       setInventoryLog(data);
       const total = data.reduce((sum, row) => sum + (parseFloat(row.revenue) || 0), 0);
@@ -63,7 +70,8 @@ const StoreAdminView = () => {
 
   const fetchAuditSummary = async () => {
     try {
-      const response = await axios.get(`http://localhost:3002/api/audit-summary?warehouse=${selectedStore}&category=${selectedCategory}`);
+      // 🛠️ Updated path to string template environment literal
+      const response = await axios.get(`${baseUrl}/api/audit-summary?warehouse=${selectedStore}&category=${selectedCategory}`);
       setAuditSummary(response.data || { financial_loss: 0, dead_stock: 0, market_gaps: 0, revenue_gaps: 0 });
     } catch (error) {
       console.error("Audit Summary Error:", error);
@@ -72,8 +80,8 @@ const StoreAdminView = () => {
 
   const fetchAnomalies = async () => {
     try {
-      const response = await axios.get(`http://localhost:3002/api/anomalies`);
-      // Filter anomalies to only show those belonging to the logged-in store
+      // 🛠️ Updated path to string template environment literal
+      const response = await axios.get(`${baseUrl}/api/anomalies`);
       const filtered = (response.data || []).filter(a => a.warehouse_id === selectedStore);
       setAnomalies(filtered);
     } catch (error) {
@@ -90,15 +98,19 @@ const StoreAdminView = () => {
   const runAIForecast = async () => {
     setIsSyncing(true);
     try {
-      const response = await axios.post(`http://localhost:3002/api/predict`, {
+      // 🛠️ Updated paths to string template environment literals
+      const response = await axios.post(`${baseUrl}/api/predict`, {
         store: selectedStore,
         item: selectedProduct,
         stock: currentStock,
         price: basePrice
       });
       setForecastResult(response.data);
-    } catch (error) { console.error(error); }
-    finally { setIsSyncing(false); }
+    } catch (error) { 
+      console.error(error); 
+    } finally { 
+      setIsSyncing(false); 
+    }
   };
 
   return (
@@ -118,7 +130,7 @@ const StoreAdminView = () => {
       </aside>
 
       <div className="flex-1 flex flex-col">
-        {/* NAVBAR - Switching options removed as requested */}
+        {/* NAVBAR */}
         <nav className="h-16 bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="lg:hidden text-slate-400"><Menu /></button>
@@ -215,7 +227,7 @@ const StoreAdminView = () => {
                                 </div>
                             </div>
                         </div>
-                        <p className="text-lg font-black text-red-500 italic uppercase italic">CRITICAL</p>
+                        <p className="text-lg font-black text-red-500 italic uppercase">CRITICAL</p>
                     </div>
                 ))}
               </div>

@@ -51,6 +51,9 @@ const Store3Dashboard = () => {
   const [forecastResult, setForecastResult] = useState(null);
   const [isAnomalyModalOpen, setIsAnomalyModalOpen] = useState(false);
 
+  // 🌐 Global dynamic base path environment configuration string
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+
   const utilizationData = [
     { subject: 'Space Used', A: 120, fullMark: 150 },
     { subject: 'Efficiency', A: 98, fullMark: 150 },
@@ -62,35 +65,35 @@ const Store3Dashboard = () => {
   useEffect(() => {
     const fetchAutomationLogs = async () => {
       try {
-        const res = await axios.get(`http://localhost:3002/alert/automation-logs?store=${selectedStore}`);
+        const res = await axios.get(`${baseUrl}/alert/automation-logs?store=${selectedStore}`);
         const logs = res.data?.productLogs || [];
         const filteredLogs = logs.filter((item) => item.status.includes("UNDERSTOCK") || item.status.includes("OVERSTOCK"));
         setAutomationLogs(filteredLogs);
       } catch (error) { console.error("Automation Logs Error:", error); }
     };
     fetchAutomationLogs();
-  }, [selectedStore]);
+  }, [selectedStore, baseUrl]);
 
   useEffect(() => {
     const fetchRevenue = async () => {
       try {
-        const response = await axios.get(`http://localhost:3002/revenue/warehouse/${selectedStore}`);
+        const response = await axios.get(`${baseUrl}/revenue/warehouse/${selectedStore}`);
         setWh3Revenue(Number(response.data?.totalRevenue || 0));
       } catch (error) { setWh3Revenue(0); }
     };
     fetchRevenue();
-  }, [selectedStore]);
+  }, [selectedStore, baseUrl]);
 
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        const response = await axios.get("http://localhost:3002/stock/total-stock");
+        const response = await axios.get(`${baseUrl}/stock/total-stock`);
         const wh3 = response.data?.breakdown?.[selectedStore];
         setWh3Stock(wh3 ? Number(wh3) : 0);
       } catch (error) { setWh3Stock(0); }
     };
     fetchStock();
-  }, [selectedStore]);
+  }, [selectedStore, baseUrl]);
 
   useEffect(() => {
     if (isAnomalyModalOpen) { fetchAuditSummary(selectedStore, modalCategory); }
@@ -101,12 +104,12 @@ const Store3Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const invRes = await axios.get(`http://localhost:3002/StockData/inventory?store=${selectedStore}&item=${selectedProduct}`);
+        const invRes = await axios.get(`${baseUrl}/StockData/inventory?store=${selectedStore}&item=${selectedProduct}`);
         const data = Array.isArray(invRes.data) ? invRes.data : [];
         setInventoryLog(data);
         setTotalRevenue(data.reduce((sum, row) => sum + (parseFloat(row.revenue) || 0), 0));
 
-        const anomalyRes = await axios.get(`http://localhost:3002/api/anomalies`);
+        const anomalyRes = await axios.get(`${baseUrl}/api/anomalies`);
 
         let anomalyList = [];
         if (Array.isArray(anomalyRes.data)) {
@@ -125,23 +128,23 @@ const Store3Dashboard = () => {
       }
     };
     fetchData();
-  }, [selectedStore, selectedProduct, selectedCategory]);
+  }, [selectedStore, selectedProduct, selectedCategory, baseUrl]);
 
   const runAIForecast = async () => {
     setIsSyncing(true);
     try {
-      const response = await axios.post(`http://localhost:3002/api/predict`, {
+      const response = await axios.post(`${baseUrl}/api/predict`, {
         store: selectedStore, item: selectedProduct, stock: currentStock, price: basePrice
       });
       setForecastResult(response.data);
-      const compRes = await axios.get(`http://localhost:3002/competitor-price?store=${selectedStore}&item=${selectedProduct}&stock=${currentStock}&price=${basePrice}`);
+      const compRes = await axios.get(`${baseUrl}/competitor-price?store=${selectedStore}&item=${selectedProduct}&stock=${currentStock}&price=${basePrice}`);
       setCompetitorPrice(compRes.data.competitor_price);
     } catch (error) { console.error(error); } finally { setIsSyncing(false); }
   };
 
   const fetchAuditSummary = async (store, category) => {
     try {
-      const res = await axios.get(`http://localhost:3002/api/audit-summary?store=${store}&category=${category}`);
+      const res = await axios.get(`${baseUrl}/api/audit-summary?store=${store}&category=${category}`);
       const data = res.data || {};
       setAuditSummary({
         financial_loss: Number(data.financial_loss || 0),
@@ -163,7 +166,7 @@ const Store3Dashboard = () => {
       let aiGeneratedReportText = "";
 
       try {
-        const auditReportRes = await axios.get(`http://localhost:3002/api/audit-report?warehouse_id=${selectedStore}`);
+        const auditReportRes = await axios.get(`${baseUrl}/api/audit-report?warehouse_id=${selectedStore}`);
         auditData = auditReportRes.data?.warehouse_summary?.undefined || {};
         categoryData = auditReportRes.data?.faulty_records || {};
         aiGeneratedReportText = auditReportRes.data?.report || "";
@@ -180,8 +183,8 @@ const Store3Dashboard = () => {
       }
 
       const [revenueRes, stockRes] = await Promise.all([
-        axios.get(`http://localhost:3002/revenue/warehouse/${selectedStore}`).catch(() => ({ data: { totalRevenue: 0 } })),
-        axios.get(`http://localhost:3002/stock/total-stock`).catch(() => ({ data: { breakdown: {} } }))
+        axios.get(`${baseUrl}/revenue/warehouse/${selectedStore}`).catch(() => ({ data: { totalRevenue: 0 } })),
+        axios.get(`${baseUrl}/stock/total-stock`).catch(() => ({ data: { breakdown: {} } }))
       ]);
 
       const revenue = Number(revenueRes.data?.totalRevenue || 0);
@@ -331,7 +334,7 @@ const Store3Dashboard = () => {
       const timestamp = new Date().toLocaleString();
       let auditData = {};
       try {
-        const res = await axios.get(`http://localhost:3002/api/audit-summary?store=${selectedStore}&category=${modalCategory}`);
+        const res = await axios.get(`${baseUrl}/api/audit-summary?store=${selectedStore}&category=${modalCategory}`);
         auditData = res.data || {};
       } catch (error) { console.error("Audit fetch failed:", error); }
 
@@ -425,7 +428,6 @@ const Store3Dashboard = () => {
             <h2 className="text-xl font-black italic text-[#4b7291] tracking-tight">Welcome Manager !</h2>
           </div>
           <div className="flex items-center gap-4">
-             {/* 🔕 Notification markup block explicitly cleaned out from header navigation line layout */}
              <button onClick={generateIntelligenceReport} className="flex items-center gap-2 px-6 py-2.5 bg-[#4b7291] text-white rounded-xl font-black text-[11px] uppercase shadow-[0_5px_15px_rgba(75,114,145,0.3)] hover:scale-105 active:scale-95 transition-all">
                 <Download size={14}/> Full Intelligence Report
              </button>
@@ -436,7 +438,7 @@ const Store3Dashboard = () => {
           <div className="mb-6 animate-in slide-in-from-left duration-700">
             <h2 className="text-2xl font-black uppercase italic text-slate-800 tracking-tighter flex items-center gap-3">
               <div className="w-2 h-8 bg-[#4b7291] rounded-full"></div>
-               Warehouse 03
+                Warehouse 03
             </h2>
           </div>
 
