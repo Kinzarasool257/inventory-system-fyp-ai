@@ -20,7 +20,7 @@ import StoreAdminView from "./pages/manager/StoreDashboardView";
 import AdminChat from "./pages/admin/AdminChat";
 import UserChat from "./pages/shared/UserChat";
 import StockDashboard from "./pages/shared/StockDashboard";
-import Chatbot from "./chatbot"
+import Chatbot from "./pages/manager/chatbot/chatbot"
 /* ================= DASHBOARD LAYOUT ================= */
 function DashboardLayout() {
   return (

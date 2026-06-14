@@ -44,7 +44,7 @@ const TopNavbar = ({ setSidebarOpen, isSidebarOpen, role = "manager" }) => {
         {/* 🤖 Chatbot icon is visible ONLY on the admin dashboard header layout */}
         {isAdmin ? (
           <button 
-            onClick={() => navigate('/admin-chat')}
+            onClick={() => navigate('/chatbot')}
             className="p-2 bg-white border-2 border-[#2b3a4a] text-[#2b3a4a] rounded-xl hover:bg-slate-50 transition-all relative shadow-sm group"
             title="Open Strategic AI Assistant"
           >

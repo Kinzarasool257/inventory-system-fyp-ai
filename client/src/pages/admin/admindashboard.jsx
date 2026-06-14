@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 
@@ -67,7 +67,7 @@ const AdminDashboard = () => {
       { id: 'WH-1', category: '', financial_loss: 0, data_gaps: 0, dead_stock: 0, market_gaps: 0 },
       { id: 'WH-2', category: '', financial_loss: 0, data_gaps: 0, dead_stock: 0, market_gaps: 0 },
       { id: 'WH-3', category: '', financial_loss: 0, data_gaps: 0, dead_stock: 0, market_gaps: 0 },
-      { id: 'WH-4', category: '', financial_loss: 0, data_gaps: 0, dead_stock: 0, market_gaps: 0 }
+      { id: 'WH-4', category: '', financial_loss: 0, data_gaps: 0, dead_stock: 0, market_gaps: 0 },
     ],
     warehouseMarketData: [
       { category: 'Books', avgComp: 105, aiPredict: 104, demand: 450, trend: '+12.5%' },
@@ -341,7 +341,7 @@ const AdminDashboard = () => {
       doc.setFont("helvetica", "normal");
 
       const reportLines = doc.splitTextToSize(
-        generatedReport.replace(/\*\*/g, ""),
+        generatedReport.replace(/\*\fail\*\*/g, ""),
         180
       );
       doc.text(reportLines, 15, y);
@@ -405,32 +405,32 @@ const AdminDashboard = () => {
         <div className="ims-card p-6 shadow-xl bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/40">
           <h3 className="text-[11px] font-black uppercase text-slate-500 mb-6 flex items-center gap-2 tracking-widest"><Boxes size={14}/> Stock Volume per Category</h3>
           <div className="h-[280px]"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={getWarehouseStockData(id)}  innerRadius={60} outerRadius={85}
-      paddingAngle={5}
-      dataKey="stock"
-      nameKey="category"
-    >
-      {getWarehouseStockData(id).map((entry, index) => (
-        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-      ))}
-    </Pie>
-    <Tooltip />
-   <Legend />
-  </PieChart></ResponsiveContainer></div>
+        paddingAngle={5}
+        dataKey="stock"
+        nameKey="category"
+      >
+        {getWarehouseStockData(id).map((entry, index) => (
+          <Cell key={index} fill={COLORS[index % COLORS.length]} />
+        ))}
+      </Pie>
+      <Tooltip />
+     <Legend />
+    </PieChart></ResponsiveContainer></div>
         </div>
         <div className="ims-card p-6 shadow-xl bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/40">
           <h3 className="text-[11px] font-black uppercase text-slate-500 mb-6 flex items-center gap-2 tracking-widest"><BrainCircuit size={14} className="text-[#4b7291]"/> Market Intelligence Audit</h3>
           <div className="h-[280px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={marketAuditData}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#cbd5e1" /><XAxis dataKey="category" fontSize={10} fontWeight="900" /><YAxis fontSize={10} fontWeight="700" /><Tooltip cursor={{fill: '#f8fafc'}} /><Legend /><Bar
-    name="Avg Competitor Price"
-    dataKey="competitor_price"
-    fill="#94a3b8" 
-    radius={[4, 4, 0, 0]}
-  />
-  <Bar
-    name="Avg Price"
-    dataKey="unit_price"
-    fill="#4b7291" 
-    radius={[4, 4, 0, 0]}
-  /></BarChart></ResponsiveContainer></div>
+      name="Avg Competitor Price"
+      dataKey="competitor_price"
+      fill="#94a3b8" 
+      radius={[4, 4, 0, 0]}
+    />
+    <Bar
+      name="Avg Price"
+      dataKey="unit_price"
+      fill="#4b7291" 
+      radius={[4, 4, 0, 0]}
+    /></BarChart></ResponsiveContainer></div>
         </div>
       </div>
       <div className="ims-card p-6 shadow-xl bg-white/70 backdrop-blur-md rounded-[2rem] border border-white/40">
@@ -566,6 +566,14 @@ const AdminDashboard = () => {
               )}
             </div>
             <NavItem icon={<FileText size={18}/>} label="Full Analytics" onClick={() => setIsReportModalOpen(true)} />
+            
+            {/* 🤖 NEW: Linked AI Chatbot Hub Option */}
+            <NavItem 
+              icon={<MessageSquare size={18}/>} 
+              label="AI Chat Assistant" 
+              active={selectedView === 'chatbot'} 
+              onClick={() => navigate('/chatbot')} 
+            />
           </nav>
         </div>
       </aside>
