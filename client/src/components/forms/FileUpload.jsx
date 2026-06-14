@@ -8,6 +8,9 @@ function FileUpload() {
   const [loading, setLoading] = useState(false);
   const [validatedData, setValidatedData] = useState([]);
 
+  // 🌐 Dynamic API Base URL fallback initialization
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+
   const handleUpload = async () => {
     if (!file || !table) {
       setMessage('❗ Please select a file and table');
@@ -22,7 +25,8 @@ function FileUpload() {
     setMessage('');
 
     try {
-      const res = await axios.post('http://localhost:3002/import-excel', formData);
+      // 🛠️ Swapped hardcoded path for the dynamic template string literal path
+      const res = await axios.post(`${baseUrl}/import-excel`, formData);
       setMessage(res.data.message);
       setValidatedData(res.data.validatedData || []);
       console.log('✅ ValidatedData:', res.data.validatedData);
@@ -122,8 +126,9 @@ function FileUpload() {
             </div>
 
             {/* Download Button */}
+            {/* 🛠️ Swapped download endpoint string for the dynamic baseUrl variable route wrapper */}
             <a
-              href="http://localhost:3002/download"
+              href={`${baseUrl}/download`}
               className="inline-block mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               download
             >

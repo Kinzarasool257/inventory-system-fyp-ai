@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Package, Clock, ShieldAlert, BrainCircuit, DollarSign, TrendingUp, Wrench } from 'lucide-react';
-import { useNotifications, NOTIF_TYPES } from '../context/NotificationContext';
+import { useNotifications, NOTIF_TYPES } from '../../context/NotificationContext';
 
 // Icon mapping per notification type
 const typeIconMap = {

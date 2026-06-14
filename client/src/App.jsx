@@ -1,39 +1,40 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Chatbot from "./Chatbot";
-import Login from "./components/Login";
-import Signup from "./components/Signup";
-import Sidebar from "./components/sidebar";
-import Header from "./components/header";
-import Dashboard from "./components/dashboard"; // small stat card
-import InventoryOverview from "./components/graphs"; // 👈 MIDDLE DASHBOARD UI
-import FileUpload from "./components/FileUpload";
-import StoreAdminView from "./components/StoreDashboardView";
-import AdminChat from "./pages/AdminChat";
-import UserChat from "./pages/UserChat";
-import StockDashboard from "./StockDashboard";
 
-// 🔔 NEW IMPORTS for notification system
-import { NotificationProvider } from "./context/NotificationContext";
-import NotificationToast from "./components/NotificationToast";
-import NotificationsPage from "./pages/NotificationsPage";
+// 🔐 Authentication Components (pages/auth/)
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
+
+// 🏗️ Shared Core Layout Components (components/common/)
+import Sidebar from "./components/common/sidebar"; 
+import Header from "./components/common/header";   
+import Dashboard from "./pages/manager/dashboard"; 
+
+// 📊 Data Visualization Features (components/charts/)
+import InventoryOverview from "./components/charts/graphs"; 
+
+// 📂 Operational Assets & Forms (components/forms/)
+import FileUpload from "./components/forms/FileUpload";
+
+// 🏪 Warehouse Management Panes (pages/manager/ & pages/admin/)
+import StoreAdminView from "./pages/manager/StoreDashboardView"; 
+import AdminChat from "./pages/admin/AdminChat";
+import UserChat from "./pages/shared/UserChat";
+import StockDashboard from "./pages/shared/StockDashboard";
 
 /* ================= DASHBOARD LAYOUT ================= */
 function DashboardLayout() {
   return (
     <div className="flex min-h-screen">
-      
       {/* Sidebar */}
       <Sidebar />
 
       {/* Right Section */}
       <div className="flex-1 bg-gray-100 flex flex-col">
-        
         {/* Header */}
         <Header />
 
         {/* MAIN DASHBOARD CONTENT */}
         <main className="p-6 space-y-6">
-
           {/* Small summary cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Dashboard title="Total Stock Value" value="$4.25M" />
@@ -41,9 +42,8 @@ function DashboardLayout() {
             <Dashboard title="Return Rate" value="2.9%" />
           </div>
 
-          {/* 🔥 IMAGE DASHBOARD (GRAPHS + TABLES) */}
+          {/* GRAPHS + TABLES */}
           <InventoryOverview />
-
         </main>
       </div>
     </div>
@@ -52,43 +52,26 @@ function DashboardLayout() {
 
 /* ================= APP ROUTES ================= */
 function App() {
-  // 🔔 Get user info from localStorage (set during login)
-  // role = "admin" or "manager"; warehouseId = "Warehouse 1" etc. (null for admin)
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const role = user.role || "admin";
-  const warehouseId = user.warehouseId || null;
-
   return (
-    <NotificationProvider role={role} warehouseId={warehouseId}>
-      <Router>
-        <Routes>
-         
-          <Route path="/" element={<Navigate to="/login" replace />} />
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* Auth pages */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+        {/* Auth pages */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
-          {/* Dashboard */}
-          {/* <Route path="/dashboard" element={<DashboardLayout />} /> */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          {/* Other pages */}
-          <Route path="/FileUpload" element={<FileUpload />} />
-          <Route path="/admin-chat" element={<AdminChat />} />
-          <Route path="/user-chat" element={<UserChat />} />
-          <Route path="stock" element={<StockDashboard />} />
-          <Route path="/view" element={<StoreAdminView />} />
-          <Route path="/chatbot" element={<Chatbot />} />
-
-          {/* 🔔 NEW notifications page route */}
-          <Route path="/notifications" element={<NotificationsPage />} />
-          
-        </Routes>
-
-        {/* 🔔 Toast popups render globally — visible on every page */}
-        <NotificationToast />
-      </Router>
-    </NotificationProvider>
+        {/* Dashboard */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/chatbot" element={<Chatbot />} />
+        {/* Other pages */}
+        <Route path="/FileUpload" element={<FileUpload />} />
+        <Route path="/admin-chat" element={<AdminChat />} />
+        <Route path="/user-chat" element={<UserChat />} />
+        <Route path="stock" element={<StockDashboard />} />
+        <Route path="/view" element={<StoreAdminView />} />
+      </Routes>
+    </Router>
   );
 }
 

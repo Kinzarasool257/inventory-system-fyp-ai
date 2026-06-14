@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import inventoryBg from '../assets/inventory_illustration.jpeg'; 
-import { ArrowLeft } from 'lucide-react';
-// Import the new logo image
-import smartStockLogo from '../assets/Smart Stock (4).png'; 
-import googleIcon from '../assets/google.png';
-import appleIcon from '../assets/apple.png';
+import inventoryBg from "../../assets/inventory_illustration.jpeg";
+import { ArrowLeft } from "lucide-react";
+import smartStockLogo from "../../assets/Smart Stock (4).png";
+import googleIcon from '../../assets/google.png';
+import appleIcon from '../../assets/apple.png';
 import { useNavigate, Link } from 'react-router-dom';
 import Axios from 'axios';
 

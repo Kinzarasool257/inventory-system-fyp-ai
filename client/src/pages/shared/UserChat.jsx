@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
-import socket from "../socket";
+import { useAuth } from "../../context/AuthContext";
+import socket from "../../socket";
 
 export default function UserChat() {
   const { user } = useAuth();

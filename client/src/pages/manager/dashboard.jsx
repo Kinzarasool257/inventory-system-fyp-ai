@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import Store1Dashboard from "./Store1Dashboard";
 import Store2Dashboard from "./Store2Dashboard";
 import Store3Dashboard from "./Store3Dashboard";
 import Store4Dashboard from "./Store4Dashboard";
-import AdminDashboard from "./admindashboard";
+import AdminDashboard from "../admin/admindashboard";
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [message, setMessage] = useState("");
+
+  // 🌐 Dynamic base URL fallback matching your production environment configurations
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
 
   useEffect(() => {
     if (!user) return;
@@ -22,7 +26,8 @@ export default function Dashboard() {
 
     const fetchDashboard = async () => {
       try {
-        const res = await fetch(`http://localhost:3002${routeMap[user.role]}`, {
+        // 🛠️ Swapped hardcoded path for the dynamic template string literal path
+        const res = await fetch(`${baseUrl}${routeMap[user.role]}`, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
@@ -40,7 +45,7 @@ export default function Dashboard() {
     };
 
     fetchDashboard();
-  }, [user]);
+  }, [user, baseUrl]);
 
   if (!user) return <p>Please login first</p>;
 

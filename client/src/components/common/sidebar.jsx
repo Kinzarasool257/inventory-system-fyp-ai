@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from "../context/AuthContext"; // make sure path is correct
+import { useAuth } from "../../context/AuthContext"; // make sure path is correct
 import { useNavigate } from "react-router-dom";
 const Sidebar = () => {
   const { user } = useAuth(); 

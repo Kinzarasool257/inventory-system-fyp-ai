@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import inventoryBg from '../assets/inventory_illustration.jpeg'; 
+import inventoryBg from '../../assets/inventory_illustration.jpeg'; 
 import { ArrowLeft } from 'lucide-react';
 // Import the new logo image
-import smartStockLogo from '../assets/Smart Stock (4).png'; 
-import googleIcon from '../assets/google.png';
-import appleIcon from '../assets/apple.png';
+import smartStockLogo from '../../assets/Smart Stock (4).png'; 
+import googleIcon from '../../assets/google.png';
+import appleIcon from '../../assets/apple.png';
 import Axios from 'axios';
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const { login } = useAuth(); 
