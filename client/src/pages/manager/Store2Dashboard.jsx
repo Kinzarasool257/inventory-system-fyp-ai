@@ -35,7 +35,7 @@ const Store2Dashboard = () => {
   };
 
   const COLORS = ['#4b7291', '#70d6bc', '#ffd08a', '#ff8a8a'];
-
+  const [utilizationData, setUtilizationData] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('Books');
   const [selectedProduct, setSelectedProduct] = useState('Book_1');
   const [modalCategory, setModalCategory] = useState('Books');
@@ -54,13 +54,61 @@ const Store2Dashboard = () => {
   // 🌐 Global dynamic base path environment configuration string
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
 
-  const utilizationData = [
-    { subject: 'Space Used', A: 120, fullMark: 150 },
-    { subject: 'Efficiency', A: 98, fullMark: 150 },
-    { subject: 'Access Speed', A: 86, fullMark: 150 },
-    { subject: 'Safety', A: 140, fullMark: 150 },
-    { subject: 'Organization', A: 85, fullMark: 150 },
-  ];
+  useEffect(() => {
+    const buildUtilization = async () => {
+      try {
+        const [stockRes, revenueRes, inventoryRes, logsRes] = await Promise.all([
+          axios.get(`${baseUrl}/stock/total-stock`),
+          axios.get(`${baseUrl}/revenue/warehouse/${selectedStore}`),
+          axios.get(`${baseUrl}/StockData/inventory?store=${selectedStore}&item=${selectedProduct}`),
+          axios.get(`${baseUrl}/alert/automation-logs?store=${selectedStore}`)
+        ]);
+  
+        const totalStock = stockRes.data?.breakdown?.[selectedStore] || 0;
+        const revenue = revenueRes.data?.totalRevenue || 0;
+        const inventory = Array.isArray(inventoryRes.data) ? inventoryRes.data : [];
+        const logs = logsRes.data?.productLogs || [];
+  
+        const efficiencyScore = Math.min(150, inventory.length * 2);
+        const accessSpeedScore = Math.min(150, logs.length * 5);
+        const safetyScore = totalStock > 0 ? Math.min(150, (revenue / totalStock) * 2) : 0;
+        const organizationScore = Math.min(150, 100 - logs.filter(l => l.status?.includes("OVERSTOCK")).length * 10);
+  
+        setUtilizationData([
+          {
+            subject: "Space Used",
+            A: Math.min(150, totalStock / 10),
+            fullMark: 150,
+          },
+          {
+            subject: "Efficiency",
+            A: efficiencyScore,
+            fullMark: 150,
+          },
+          {
+            subject: "Access Speed",
+            A: accessSpeedScore,
+            fullMark: 150,
+          },
+          {
+            subject: "Safety",
+            A: safetyScore,
+            fullMark: 150,
+          },
+          {
+            subject: "Organization",
+            A: Math.max(0, organizationScore),
+            fullMark: 150,
+          },
+        ]);
+      } catch (err) {
+        console.error("Utilization build error:", err);
+      }
+    };
+  
+    buildUtilization();
+  }, [selectedStore, selectedProduct, baseUrl, inventoryLog, automationLogs]);
+  
 
   useEffect(() => {
     const fetchAutomationLogs = async () => {

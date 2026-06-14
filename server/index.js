@@ -22,6 +22,7 @@ const importExcelRoute = require('./routes/importExcelRoute');
 const stockRoutes = require('./routes/stockRoutes');
 const revenueRoutes = require('./routes/revenue');
 const marketAuditRoute = require("./routes/marketAudit");
+const { Server } = require("socket.io");
 const app = express();
 
 app.use(express.json());
@@ -29,17 +30,16 @@ app.use(cors());
 const server = http.createServer(app);
 
 
-// const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
-// const io = new Server(server, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST"]
-//   }
-// });
-
-// attach socket logic
-// require("./socket")(io);
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+});
 
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -107,12 +107,46 @@ app.post("/api/predict", (req, res) => {
 // ✅ Signup route
 app.post('/signup', async (req, res) => {
   const { Email, Name, Password, role } = req.body;
-  
+
   try {
-    const hashedPassword = await bcrypt.hash(Password, 10);
-    const SQL = 'INSERT INTO users (email, name, password , role) VALUES (?, ?, ?,?)';
-    await db.query(SQL, [Email, Name, hashedPassword, role]);
-    res.send({ message: 'User added!' });
+    // ✅ 1. Validate password length
+    if (!Password || Password.length < 6) {
+      return res.status(400).send({
+        error: 'Password must be at least 6 characters long'
+      });
+    }
+
+    // ✅ 2. Check if email already exists
+    const checkSQL = 'SELECT * FROM users WHERE email = ?';
+    db.query(checkSQL, [Email], async (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send({ error: 'Database error' });
+      }
+
+      if (result.length > 0) {
+        return res.status(400).send({
+          error: 'Email already exists'
+        });
+      }
+
+      // ✅ 3. Hash password
+      const hashedPassword = await bcrypt.hash(Password, 10);
+
+      // ✅ 4. Insert user
+      const insertSQL =
+        'INSERT INTO users (email, name, password, role) VALUES (?, ?, ?, ?)';
+
+      db.query(insertSQL, [Email, Name, hashedPassword, role], (err2) => {
+        if (err2) {
+          console.error(err2);
+          return res.status(500).send({ error: 'Signup failed' });
+        }
+
+        res.send({ message: 'User added!' });
+      });
+    });
+
   } catch (err) {
     console.error(err);
     res.status(500).send({ error: 'Signup failed' });

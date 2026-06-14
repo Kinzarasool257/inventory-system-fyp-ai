@@ -36,18 +36,18 @@ Content-Type: application/json
 
 {
   "Email": "store4@test.com",
-  "Name": "Store Two",
+  "Name": "Store Four",
   "Password": "123456",
   "role": "store4"
 }
 
 
-### Login Store2
+### Login Store1
 POST http://localhost:3002/login
 Content-Type: application/json
 
 {
-  "LoginEmail": "store1@test.com",
+  "LoginEmail": "store2@test.com",
   "LoginPassword": "123456"
 }
 ###forecast prediction
