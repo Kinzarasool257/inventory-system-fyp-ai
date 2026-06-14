@@ -10,7 +10,6 @@ import {
   Menu, X, Download, ShieldAlert, Layers, ShoppingCart, 
   ArrowDownCircle, ArrowUpCircle, Scale, Zap, Boxes, MessageSquare, LineChart
 } from 'lucide-react';
-import ManagerNotificationBell from '../../components/notifications/ManagerNotificationBell';
 
 import bgImage from "../../images/bg.jpg"; 
 
@@ -153,7 +152,7 @@ const Store1Dashboard = () => {
     } catch (error) { console.error("Audit API error:", error); }
   };
 
-const generateIntelligenceReport = async () => {
+  const generateIntelligenceReport = async () => {
     setIsSyncing(true);
     try {
       const doc = new jsPDF();
@@ -163,18 +162,13 @@ const generateIntelligenceReport = async () => {
       let categoryData = {};
       let aiGeneratedReportText = "";
 
-      // 1. Fetch data from the integrated audit report endpoint
       try {
         const auditReportRes = await axios.get(`http://localhost:3002/api/audit-report?warehouse_id=${selectedStore}`);
-        
-        // Extract structural summary matching your nested response object
         auditData = auditReportRes.data?.warehouse_summary?.undefined || {};
         categoryData = auditReportRes.data?.faulty_records || {};
         aiGeneratedReportText = auditReportRes.data?.report || "";
       } catch (apiErr) {
         console.warn("Backend API request failed or encountered rate limits. Using fallback state values.");
-        
-        // Operational fallback matching your backend data types
         auditData = { total_records: 58400, overpriced_cases: 4216, dead_stock_cases: 1389, financial_loss_cases: 0 };
         categoryData = { 
           Books: { total_faults: 3247 }, 
@@ -185,7 +179,6 @@ const generateIntelligenceReport = async () => {
         aiGeneratedReportText = "**Action Plan: Warehouse Risk Assessment**\n\n### Immediate Actions (Next 30 days)\n1. Investigate Overpriced Cases\n* Assign a team to balance pricing parameters across affected stock items.\n2. Dead Stock Clearance Framework\n* Implement operational clearance channels for zero-movement inventory segments.";
       }
 
-      // 2. Fetch parallel financial metrics matching original implementation
       const [revenueRes, stockRes] = await Promise.all([
         axios.get(`http://localhost:3002/revenue/warehouse/${selectedStore}`).catch(() => ({ data: { totalRevenue: 0 } })),
         axios.get(`http://localhost:3002/stock/total-stock`).catch(() => ({ data: { breakdown: {} } }))
@@ -194,7 +187,6 @@ const generateIntelligenceReport = async () => {
       const revenue = Number(revenueRes.data?.totalRevenue || 0);
       const totalStock = Number(stockRes.data?.breakdown?.[selectedStore] || 0);
 
-      // --- PAGE 1: EXECUTIVE BRIEF & RISK DISTRIBUTION ---
       doc.setFillColor(43, 58, 74); 
       doc.rect(0, 0, 210, 45, 'F');
       doc.setTextColor(255, 255, 255);
@@ -205,7 +197,6 @@ const generateIntelligenceReport = async () => {
       doc.setFont("helvetica", "normal");
       doc.text(`Warehouse Terminal: ${selectedStore} | Issued: ${timestamp}`, 15, 35);
 
-      // Section 1: Business Overview
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
@@ -219,7 +210,6 @@ const generateIntelligenceReport = async () => {
       doc.text(`Total Revenue: $${revenue.toLocaleString()}`, 20, 80);
       doc.text(`Total Stock Units: ${totalStock}`, 20, 88);
 
-      // Section 2: Inventory Health Analysis (Data from audit-report API)
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("2. Inventory Health Analysis", 15, 105);
@@ -240,7 +230,6 @@ const generateIntelligenceReport = async () => {
       doc.text("Financial Loss Cases", 20, 139);
       doc.text(String(auditData.financial_loss_cases || 0), 140, 139);
 
-      // Section 3: Critical Sector Fault Distribution Table
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("3. Critical Fault Distribution Matrix", 15, 155);
@@ -256,7 +245,6 @@ const generateIntelligenceReport = async () => {
         yPos += 8;
       });
 
-      // --- PAGE 2: AI GENERATED OPERATIONAL PLAN ---
       if (aiGeneratedReportText) {
         doc.addPage();
         let runningY = 25;
@@ -275,7 +263,6 @@ const generateIntelligenceReport = async () => {
         doc.line(15, runningY + 2, 195, runningY + 2);
         runningY += 12;
 
-        // Clean out raw double asterisks and map array line lines safely
         const reportLines = aiGeneratedReportText.replace(/\*\*/g, "").split("\n");
 
         reportLines.forEach((rawRow) => {
@@ -285,13 +272,11 @@ const generateIntelligenceReport = async () => {
             return;
           }
 
-          // Handle page break layouts dynamically
           if (runningY > 275) {
             doc.addPage();
             runningY = 25;
           }
 
-          // Format clean markdown headers
           if (currentLine.startsWith("###") || currentLine.endsWith(":") || currentLine.includes("Actions (Next")) {
             runningY += 4;
             doc.setFontSize(11);
@@ -322,7 +307,6 @@ const generateIntelligenceReport = async () => {
         });
       }
 
-      // Page footer enumeration generator loop
       const computedTotalPages = doc.internal.getNumberOfPages();
       for (let index = 1; index <= computedTotalPages; index++) {
         doc.setPage(index);
@@ -334,14 +318,7 @@ const generateIntelligenceReport = async () => {
 
       doc.save(`Full_Intelligence_Report_${selectedStore}.pdf`);
 
-      // 🔔 Confirm report generation using original system flags
-      addNotification({
-        type: NOTIF_TYPES.SYSTEM,
-        severity: SEVERITY.INFO,
-        title: `Intelligence report generated`,
-        message: `Full intelligence report for Warehouse 1 has been exported successfully.`,
-        warehouse: "Warehouse 1",
-      });
+      // 🔔 Old notification trigger call successfully removed from here
     } catch (error) { 
       console.error("Full Report Parsing Operational Error Framework:", error); 
     } finally { 
@@ -450,7 +427,7 @@ const generateIntelligenceReport = async () => {
             <h2 className="text-xl font-black italic text-[#4b7291] tracking-tight">Welcome Manager !</h2>
           </div>
           <div className="flex items-center gap-4">
-             <ManagerNotificationBell />
+             {/* Bell markup node safely removed from header container layout */}
              <button onClick={generateIntelligenceReport} className="flex items-center gap-2 px-6 py-2.5 bg-[#4b7291] text-white rounded-xl font-black text-[11px] uppercase shadow-[0_5px_15px_rgba(75,114,145,0.3)] hover:scale-105 active:scale-95 transition-all">
                 <Download size={14}/> Full Intelligence Report
              </button>
@@ -461,7 +438,7 @@ const generateIntelligenceReport = async () => {
           <div className="mb-6 animate-in slide-in-from-left duration-700">
             <h2 className="text-2xl font-black uppercase italic text-slate-800 tracking-tighter flex items-center gap-3">
               <div className="w-2 h-8 bg-[#4b7291] rounded-full"></div>
-               Warehouse 01
+                Warehouse 01
             </h2>
           </div>
 

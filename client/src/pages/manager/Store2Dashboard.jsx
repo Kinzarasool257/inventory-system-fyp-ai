@@ -10,7 +10,6 @@ import {
   Menu, X, Download, ShieldAlert, Layers, ShoppingCart, 
   ArrowDownCircle, ArrowUpCircle, Scale, Zap, Boxes, MessageSquare, LineChart
 } from 'lucide-react';
-import ManagerNotificationBell from '../../components/notifications/ManagerNotificationBell';
 
 import bgImage from "../../images/bg.jpg"; 
 
@@ -23,7 +22,7 @@ const Store2Dashboard = () => {
   const [automationLogs, setAutomationLogs] = useState([]);
   const [wh2Stock, setWh2Stock] = useState(0);
   const [wh2Revenue, setWh2Revenue] = useState(0);
-  const selectedStore = 'WH-2'; // 🎯 Set strictly to Node Warehouse 2
+  const selectedStore = 'WH-2'; 
   const categories = ['Books', 'Toys', 'Electronics', 'Clothes'];
   const generateProducts = (prefix, count) =>
     Array.from({ length: count }, (_, i) => `${prefix}_${i + 1}`);
@@ -426,10 +425,10 @@ const Store2Dashboard = () => {
             <h2 className="text-xl font-black italic text-[#4b7291] tracking-tight">Welcome Manager !</h2>
           </div>
           <div className="flex items-center gap-4">
-              <ManagerNotificationBell />
-              <button onClick={generateIntelligenceReport} className="flex items-center gap-2 px-6 py-2.5 bg-[#4b7291] text-white rounded-xl font-black text-[11px] uppercase shadow-[0_5px_15px_rgba(75,114,145,0.3)] hover:scale-105 active:scale-95 transition-all">
+             {/* 🔕 Notification Node block completely cleaned out */}
+             <button onClick={generateIntelligenceReport} className="flex items-center gap-2 px-6 py-2.5 bg-[#4b7291] text-white rounded-xl font-black text-[11px] uppercase shadow-[0_5px_15px_rgba(75,114,145,0.3)] hover:scale-105 active:scale-95 transition-all">
                 <Download size={14}/> Full Intelligence Report
-              </button>
+             </button>
           </div>
         </nav>
 
@@ -597,7 +596,6 @@ const Store2Dashboard = () => {
   );
 };
 
-// Reusable sub-components block unchanged
 const StatCard = ({ label, value, icon, color, onClick, clickable }) => {
   const colorMap = { blue: 'bg-blue-50 text-[#4b7291]', teal: 'bg-teal-50 text-[#70d6bc]', rose: 'bg-rose-50 text-rose-500' };
   return (

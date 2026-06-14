@@ -605,7 +605,7 @@ const renderOverview = () => (
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
-        <TopNavbar setSidebarOpen={setSidebarOpen} isSidebarOpen={isSidebarOpen} />
+        <TopNavbar setSidebarOpen={setSidebarOpen} isSidebarOpen={isSidebarOpen} role="admin" />
         <main className="p-6 lg:p-10 overflow-y-auto">
           {selectedView === 'overview' ? renderOverview() : renderWarehouseSubView(selectedView)}
         </main>
