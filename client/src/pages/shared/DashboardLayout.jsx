@@ -1,5 +1,5 @@
 import Sidebar from "./sidebar";
-import Header from "./header";
+import Header from "../../components/common/header";
 
 function DashboardLayout({ children }) {
   return (

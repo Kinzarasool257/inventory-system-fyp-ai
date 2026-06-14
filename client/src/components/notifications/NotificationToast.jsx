@@ -1,6 +1,6 @@
 // client/src/components/NotificationToast.jsx
 import { useEffect } from "react";
-import { useNotifications, SEVERITY, NOTIF_TYPES } from "../context/NotificationContext";
+import { useNotifications, SEVERITY, NOTIF_TYPES } from "../../context/NotificationContext";
 
 const severityConfig = {
   [SEVERITY.CRITICAL]: {

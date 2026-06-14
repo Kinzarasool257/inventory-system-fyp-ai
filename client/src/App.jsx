@@ -1,22 +1,30 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "./components/Login";
-import Signup from "./components/Signup";
-import Sidebar from "./components/sidebar";
-import Header from "./components/header";
-import Dashboard from "./components/dashboard"; // small stat card
-import InventoryOverview from "./components/graphs"; // 👈 MIDDLE DASHBOARD UI
-import FileUpload from "./components/FileUpload";
-import StoreAdminView from "./components/StoreDashboardView";
-import AdminChat from "./pages/AdminChat";
-import UserChat from "./pages/UserChat";
-import StockDashboard from "./StockDashboard";
+// 🔐 Authentication Components (pages/auth/)
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 
-// 🔔 NEW IMPORTS for notification system
+// 🏗️ Shared Core Layout Components (components/common/)
+import Sidebar from "./components/common/sidebar"; // verified inside components/ folder
+import Header from "./components/common/header";   // verified inside components/ folder
+import Dashboard from "./pages/manager/dashboard"; // small stat card inside components/
+
+// 📊 Data Visualization Features (components/charts/)
+import InventoryOverview from "./components/charts/graphs"; // graphs inside components/
+
+// 📂 Operational Assets & Forms (components/forms/)
+import FileUpload from "./components/forms/FileUpload";
+
+// 🏪 Warehouse Management Panes (pages/manager/ & pages/admin/)
+import StoreAdminView from "./pages/manager/StoreDashboardView"; // inside components/
+import AdminChat from "./pages/admin/AdminChat";
+import UserChat from "./pages/shared/UserChat";
+import StockDashboard from "./pages/shared/StockDashboard";
+
+// 🔔 Real-time Global Notification Services (context/ & components/notifications/)
 import { NotificationProvider } from "./context/NotificationContext";
-import NotificationToast from "./components/NotificationToast";
-import NotificationsPage from "./pages/NotificationsPage";
-
+import NotificationToast from "./components/notifications/NotificationToast"; // inside components/
+import NotificationsPage from "./pages/shared/NotificationsPage";
 /* ================= DASHBOARD LAYOUT ================= */
 function DashboardLayout() {
   return (

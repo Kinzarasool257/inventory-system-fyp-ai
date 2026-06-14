@@ -3,7 +3,7 @@ import axios from 'axios';
 import { jsPDF } from 'jspdf';
 
 import { useNavigate } from 'react-router-dom';
-import bgImage from "../images/bg.jpg"; 
+import bgImage from "../../images/bg.jpg";
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
@@ -15,7 +15,7 @@ import {
   ChevronDown, Menu, TrendingUp, BrainCircuit, Boxes, X
 } from 'lucide-react';
 
-import TopNavbar from './TopNavbar';
+import TopNavbar from '../../components/common/TopNavbar';
 
 const AdminDashboard = () => {
   
@@ -229,6 +229,17 @@ useEffect(() => {
     const timestamp = new Date().toLocaleString();
     const isGlobal = selectedView === 'overview';
     const categories = ['Books', 'Toys', 'Electronics', 'Clothes'];
+    let generatedReport = "";
+
+try {
+  const reportRes = await axios.get(
+    "http://localhost:3002/api/audit-report"
+  );
+
+  generatedReport = reportRes.data?.report || "";
+} catch (err) {
+  console.error("Error fetching generated report:", err);
+}
 
     const fetchAllAudit = async (store) => {
         try {
@@ -340,6 +351,34 @@ useEffect(() => {
         doc.text(`${item.data.market_gaps || 0}`, 165, y);
         y += 10;
     });
+    if (generatedReport) {
+  if (y > 220) {
+    doc.addPage();
+    y = 20;
+  }
+
+  y += 15;
+
+  doc.setFontSize(14);
+  doc.setTextColor(43, 58, 74);
+  doc.setFont("helvetica", "bold");
+  doc.text("04. AI Generated Action Plan", 15, y);
+
+  doc.line(15, y + 2, 195, y + 2);
+
+  y += 12;
+
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "normal");
+
+  const reportLines = doc.splitTextToSize(
+    generatedReport.replace(/\*\*/g, ""),
+    180
+  );
+
+  doc.text(reportLines, 15, y);
+}
 
     doc.setFontSize(8);
     doc.setTextColor(148, 163, 184);

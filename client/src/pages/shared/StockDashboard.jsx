@@ -183,7 +183,7 @@
 // // App.js
 // // App.js
 // import React, { useState } from "react";
-import "./App.css"
+import "../../App.css";
 
 // // Dummy data for table
 // const dummyData = [

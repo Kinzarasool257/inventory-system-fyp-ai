@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Menu, Truck, BrainCircuit, ShieldAlert, AlertTriangle, User, Package, Clock, DollarSign, TrendingUp, Wrench } from 'lucide-react';
-import { useNotifications, NOTIF_TYPES, SEVERITY } from '../context/NotificationContext';
+import { useNotifications, NOTIF_TYPES, SEVERITY } from '../../context/NotificationContext';
 
 // 🎨 Map notification types → icons (matches your existing aesthetic)
 const typeIconMap = {

@@ -1,6 +1,6 @@
 // client/src/pages/NotificationsPage.jsx
 import { useState, useMemo } from "react";
-import { useNotifications, SEVERITY, NOTIF_TYPES } from "../context/NotificationContext";
+import { useNotifications, SEVERITY, NOTIF_TYPES } from "../../context/NotificationContext";
 
 const typeMeta = {
   [NOTIF_TYPES.LOW_STOCK]: { icon: "📦", label: "Low Stock" },

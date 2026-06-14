@@ -1,7 +1,7 @@
 // client/src/components/NotificationBell.jsx
 import { useState, useRef, useEffect } from "react";
-import { useNotifications } from "../context/NotificationContext";
-import NotificationDropdown from "./NotificationDropdown";
+import { useNotifications } from "../../context/NotificationContext";
+import NotificationDropdown from "../NotificationDropdown";
 
 const NotificationBell = () => {
   const { unreadCount } = useNotifications();

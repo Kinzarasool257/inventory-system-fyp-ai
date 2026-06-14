@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
-import socket from "../socket";
+import { useAuth } from "../../context/AuthContext.jsx";
+import socket from "../../socket.jsx";
 import axios from "axios";
 
 export default function AdminChat() {
