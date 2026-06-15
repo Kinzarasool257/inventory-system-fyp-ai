@@ -52,7 +52,7 @@ const Store2Dashboard = () => {
   const [isAnomalyModalOpen, setIsAnomalyModalOpen] = useState(false);
 
   // 🌐 Global dynamic base path environment configuration string
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://inventory-system-fyp-ai-production.up.railway.app';
 
   useEffect(() => {
     const buildUtilization = async () => {

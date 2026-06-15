@@ -15,7 +15,7 @@ export default function Chatbot() {
   const [greeting, setGreeting] = useState("Good day");
   
   const chatBoxEndRef = useRef(null);
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://inventory-system-fyp-ai-production.up.railway.app';
 
   useEffect(() => {
     const hrs = new Date().getHours();

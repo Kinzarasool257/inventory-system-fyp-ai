@@ -33,7 +33,7 @@ const Login = () => {
     }
 
     try {
-      const response = await Axios.post('http://localhost:3002/login', {
+      const response = await Axios.post('https://inventory-system-fyp-ai-production.up.railway.app/login', {
         LoginEmail: loginEmail,
         LoginPassword: loginPassword,
       });

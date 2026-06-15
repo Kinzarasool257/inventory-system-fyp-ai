@@ -11,7 +11,7 @@ export default function Dashboard() {
   const [message, setMessage] = useState("");
 
   // 🌐 Dynamic base URL fallback matching your production environment configurations
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://inventory-system-fyp-ai-production.up.railway.app';
 
   useEffect(() => {
     if (!user) return;

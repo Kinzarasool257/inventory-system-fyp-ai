@@ -11,7 +11,7 @@ function StockDashboard() {
   const [loading, setLoading] = useState(false);
 
   // 🌐 Global dynamic base path environment configuration string
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://inventory-system-fyp-ai-production.up.railway.app';
 
   // Fetch data when store or item changes
   useEffect(() => {

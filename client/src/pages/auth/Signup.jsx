@@ -32,7 +32,7 @@ const Signup = () => {
       return;
     }
 
-    Axios.post('http://localhost:3002/signup', {
+    Axios.post('https://inventory-system-fyp-ai-production.up.railway.app/signup', {
       Email: email,
       Name: name,
       Password: password,

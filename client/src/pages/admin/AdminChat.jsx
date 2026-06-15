@@ -14,7 +14,7 @@ export default function AdminChat() {
   const messagesEndRef = useRef(null);
 
   // 🌐 Global dynamic base path environment configuration string
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://inventory-system-fyp-ai-production.up.railway.app';
 
   // Auto scroll to bottom
   useEffect(() => {
